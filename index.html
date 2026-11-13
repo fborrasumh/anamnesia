@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0F2237">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; media-src blob: data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="author" content="Fernando Borrás Rocher; Elena Caride Miana">
+<meta name="description" content="AnamnesIA: primera visita guiada para la consulta de medicina estética. Pregunta solo lo que exigen las técnicas que se plantean, comprueba las contraindicaciones con reglas fijas y explicadas, recoge las señales de alarma de trastorno dismórfico corporal y las expectativas, y deja el resumen listo para la historia clínica. Sin IA y sin conexión. Español, inglés y portugués.">
+<title>AnamnesIA · Primera visita guiada en medicina estética</title><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --tinta:#0F2237; --acero:#2E4B6B; --acero-claro:#7C93AC; --gris:#5D7691;
+  --papel:#F3F6FA; --blanco:#FFFFFF; --linea:#D8E0E9; --linea-2:#E8EEF4;
+  --brasa:#E4572E; --brasa-osc:#C9441F; --brasa-suave:#FDEBE4;
+  --forjado:#0E7C6B; --forjado-suave:#E0F3EE; --aviso:#8A3617;
+  --c-ctx:#1F6FB2; --c-comp:#6B4FD8; --c-rda:#0E8C7A; --c-tema:#C98200; --c-eval:#E4572E; --c-final:#2E4B6B;
+  --sombra:0 1px 0 rgba(15,34,55,.05), 0 14px 34px -22px rgba(15,34,55,.45);
+  --sombra-alta:0 2px 0 rgba(15,34,55,.04), 0 22px 50px -24px rgba(15,34,55,.55);
+  --r:14px;
+  --display:"Bricolage Grotesque",Georgia,serif;
+  --texto:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papel);color:var(--tinta);font-family:var(--texto);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:84px}
+a{color:var(--acero)}
+:focus-visible{outline:3px solid var(--brasa);outline-offset:2px;border-radius:6px}
+.hidden{display:none!important}
+svg.i{width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+code{font-family:var(--mono);font-size:.85em;background:var(--linea-2);padding:1px 5px;border-radius:5px}
+
+/* Barra superior */
+.topbar{position:sticky;top:0;z-index:40;background:var(--tinta);color:#EAF1F7;box-shadow:0 6px 24px -14px rgba(0,0,0,.6)}
+.tb-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px}
+.logo{background:none;border:0;color:#fff;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.03em;cursor:pointer;padding:2px 4px;display:flex;align-items:center;gap:8px}
+.logo em{font-style:normal;color:var(--brasa)}
+.logo .anv{width:30px;height:30px;border-radius:9px;background:var(--brasa);display:grid;place-items:center;color:#fff}
+.stepper{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}
+.sdot{display:flex;align-items:center;gap:7px;background:none;border:0;color:#8FA7BE;font:600 13px var(--texto);padding:6px;cursor:pointer;border-radius:10px;white-space:nowrap}
+.sdot:disabled{cursor:not-allowed;opacity:.45}
+.sdot .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid #3E5C7D;font-size:12px;color:#A9C0D4;transition:all .2s}
+.sdot .n svg{width:14px;height:14px}
+.sdot[data-state="done"] .n{background:var(--forjado);border-color:var(--forjado);color:#fff}
+.sdot[data-state="now"]{color:#fff}
+.sdot[data-state="now"] .n{background:var(--brasa);border-color:var(--brasa);color:#fff;box-shadow:0 0 0 4px rgba(228,87,46,.25)}
+.sdot:not(:disabled):hover{background:rgba(255,255,255,.06)}
+.sline{flex:0 1 26px;height:2px;background:#2F4A68;min-width:6px}
+.sline.on{background:var(--forjado)}
+.tb-tools{display:flex;gap:6px}
+.tb-btn{background:transparent;border:1px solid #3E5C7D;color:#C9D8E6;border-radius:9px;padding:6px 10px;font:600 13px var(--texto);cursor:pointer;display:flex;align-items:center;gap:6px}
+.tb-btn:hover{border-color:var(--brasa);color:#fff}
+.progress{height:4px;background:#1E3550}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brasa),#F59E0B);transition:width .4s}
+@media(max-width:960px){.sdot .lbl{display:none}.sdot[data-state="now"] .lbl{display:inline}}
+@media(max-width:720px){
+  .tb-in{flex-wrap:wrap;gap:8px}
+  .stepper{order:3;flex-basis:100%;justify-content:space-between}
+  .sdot[data-state="now"] .lbl{display:none}
+  .tb-btn .lbl{display:none}
+}
+
+/* Pantallas */
+main{max-width:1180px;margin:0 auto;padding:26px 16px 40px}
+.screen{display:none}
+.screen.on{display:block}
+@media(prefers-reduced-motion:no-preference){.screen.on{animation:rise .35s cubic-bezier(.2,.7,.3,1) both}@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}}
+.sh{display:flex;gap:18px;align-items:flex-start;margin:4px 0 22px}
+.sh-ico{width:64px;height:64px;border-radius:18px;background:var(--c,var(--brasa));color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 12px 24px -14px var(--c,var(--brasa))}
+.sh-ico svg{width:32px;height:32px}
+.sh-step{font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acero-claro);margin:4px 0}
+.sh h2{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.6vw,38px);letter-spacing:-.025em;line-height:1.05;margin:0 0 6px}
+.sh-lede{margin:0;color:var(--gris);font-size:16.5px;max-width:70ch}
+@media(max-width:600px){.sh-ico{width:48px;height:48px;border-radius:14px}.sh-ico svg{width:24px;height:24px}}
+
+.card{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--r);box-shadow:var(--sombra);padding:20px;margin-bottom:18px}
+.card h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;margin:0 0 4px;display:flex;align-items:center;gap:9px}
+.card h3 .num{width:26px;height:26px;border-radius:8px;background:var(--tinta);color:#fff;font:700 13px var(--mono);display:grid;place-items:center}
+.card .sub{margin:0 0 14px;color:var(--gris);font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:20px;align-items:start}
+.sticky{position:sticky;top:96px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+label,.lab{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px;color:var(--acero)}
+label small,.lab small{font-weight:500;color:var(--acero-claro)}
+input[type=text],input[type=password],input[type=number],textarea,select{width:100%;padding:11px 13px;border:1.5px solid var(--linea);border-radius:10px;font-family:var(--texto);font-size:15px;color:var(--tinta);background:#fff;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--acero-claro);box-shadow:0 0 0 4px rgba(124,147,172,.18)}
+input.bad{border-color:var(--brasa);box-shadow:0 0 0 4px rgba(228,87,46,.15)}
+textarea{resize:vertical;min-height:96px;line-height:1.5}
+input::placeholder,textarea::placeholder{color:#9DB0C2}
+.field{margin-bottom:16px}
+.help{font-size:12.8px;color:var(--gris);margin:6px 0 0}
+.help b{color:var(--acero)}
+
+button{font-family:var(--texto);cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;font-weight:600;font-size:15px;border:1.5px solid transparent;padding:11px 18px;transition:transform .08s,background .15s,border-color .15s;text-decoration:none;line-height:1.2}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brasa);color:#fff;box-shadow:0 8px 18px -10px var(--brasa)}
+.btn-primary:hover{background:var(--brasa-osc)}
+.btn-big{font-size:17px;padding:14px 24px;border-radius:13px}
+.btn-dark{background:var(--tinta);color:#fff}
+.btn-dark:hover{background:#1c3656}
+.btn-ghost{background:#fff;border-color:var(--linea);color:var(--acero)}
+.btn-ghost:hover{border-color:var(--acero-claro);background:#F7FAFC}
+.btn-ok{background:var(--forjado);color:#fff}
+.btn-ok:hover{background:#0b6457}
+.btn-word{background:#2B579A;color:#fff}
+.btn-word:hover{background:#1e3f7a}
+.btn-sm{padding:7px 12px;font-size:13.5px;border-radius:9px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#fff;border:1.5px solid var(--linea);border-radius:999px;padding:7px 13px;font-size:13.5px;color:var(--acero);cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.25;text-align:left}
+.chip:hover{border-color:var(--brasa);color:var(--brasa)}
+.chip[aria-pressed="true"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.chip.mini-ex{font-size:12.5px;padding:4px 10px;border-style:dashed}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1.5px solid var(--linea);background:#fff;border-radius:9px;padding:7px 11px;font-size:13.5px;font-weight:600;color:var(--acero)}
+.seg button:hover{border-color:var(--acero-claro)}
+.seg button[aria-pressed="true"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+
+.meto{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.meto button{text-align:left;background:#fff;border:1.5px solid var(--linea);border-radius:12px;padding:10px 12px;color:var(--tinta)}
+.meto button b{display:block;font-size:14px}
+.meto button span{display:block;font-size:12.3px;color:var(--gris);line-height:1.35;margin-top:2px}
+.meto button:hover{border-color:var(--acero-claro)}
+.meto button[aria-pressed="true"]{border-color:var(--tinta);box-shadow:0 0 0 2px var(--tinta);background:var(--papel)}
+
+.tip{display:flex;gap:12px;background:#FFF8E6;border:1px solid #F3DDA0;border-radius:12px;padding:13px 15px;font-size:14px;color:#6B4E00;margin-bottom:18px}
+.tip svg{width:22px;height:22px;color:#C98200;flex:none;margin-top:1px}
+.tip strong{color:#523B00}
+.aviso{background:var(--brasa-suave);border:1px solid #F3C7B5;border-radius:12px;padding:13px 15px;font-size:14px;color:var(--aviso);margin-bottom:16px}
+.okbox{background:var(--forjado-suave);border:1px solid #A9DCCF;border-radius:12px;padding:13px 15px;font-size:14px;color:#0B5A4E;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* Inicio */
+.hero{background:var(--tinta);color:#EAF1F7;border-radius:22px;padding:40px 36px;position:relative;overflow:hidden;margin-bottom:26px;box-shadow:var(--sombra-alta)}
+.hero::before{content:"";position:absolute;right:-80px;top:-80px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(228,87,46,.55),transparent 65%)}
+.hero::after{content:"";position:absolute;left:30%;bottom:-140px;width:420px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(14,140,122,.35),transparent 65%)}
+.hero>*{position:relative;z-index:1}
+@media(max-width:600px){.hero{padding:28px 20px;border-radius:18px}}
+.eyebrow{font:600 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#8FA7BE;margin:0 0 14px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,5.4vw,58px);line-height:.98;letter-spacing:-.035em;margin:0 0 16px;max-width:17ch}
+.hero h1 em{font-style:normal;color:var(--brasa)}
+.hero p.lede{max-width:62ch;font-size:18px;color:#C3D3E2;margin:0 0 24px}
+.hero .actions .btn-ghost{background:transparent;color:#fff;border-color:#4A6787}
+.hero .actions .btn-ghost:hover{border-color:#fff}
+.draft{margin-top:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14.5px}
+.sec-title{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 6px}
+.sec-sub{color:var(--gris);margin:0 0 16px}
+.journey{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.jstop{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:16px;position:relative}
+.jstop .ji{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--c);margin-bottom:10px}
+.jstop .ji svg{width:20px;height:20px}
+.jstop b{display:block;font-size:15px;margin-bottom:2px}
+.jstop span{display:block;font-size:13px;color:var(--gris);line-height:1.45}
+.jstop .jn{position:absolute;top:12px;right:14px;font:700 12px var(--mono);color:var(--acero-claro)}
+@media(max-width:900px){.journey{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.journey{grid-template-columns:1fr}}
+
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.part{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--linea);border-radius:12px;padding:12px 14px}
+.part .pi{width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;flex:none}
+.part b{display:block;font-size:14.5px}
+.part span{display:block;font-size:12.8px;color:var(--gris);line-height:1.4}
+
+.examples{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.excard{background:#fff;border:1px solid var(--linea);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--sombra);position:relative;overflow:hidden;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.excard:hover{transform:translateY(-3px);box-shadow:var(--sombra-alta)}
+.excard::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--c)}
+.excard .emo{font-size:32px;line-height:1}
+.excard .area{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acero-claro)}
+.excard b{font-family:var(--display);font-size:18px;letter-spacing:-.01em;line-height:1.15}
+.excard p{margin:0;font-size:13.5px;color:var(--gris);flex:1}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);border-radius:999px;padding:3px 9px;align-self:flex-start}
+
+/* Clave */
+.keyrow{display:flex;gap:8px}
+.keyrow input{flex:1;font-family:var(--mono);font-size:14px}
+.eye{width:46px;flex:none;border:1.5px solid var(--linea);background:#fff;border-radius:10px;color:var(--acero);display:grid;place-items:center}
+.light{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--papel);margin-top:14px;font-size:14.5px;font-weight:600}
+.light .bulbo{width:14px;height:14px;border-radius:50%;background:#B8C5D3;box-shadow:0 0 0 4px rgba(184,197,211,.3);flex:none}
+.light[data-s="ok"] .bulbo{background:#16A34A;box-shadow:0 0 0 4px rgba(22,163,74,.22)}
+.light[data-s="err"] .bulbo{background:var(--brasa);box-shadow:0 0 0 4px rgba(228,87,46,.22)}
+.light[data-s="wait"] .bulbo{background:#F59E0B;box-shadow:0 0 0 4px rgba(245,158,11,.25)}
+.olsteps{list-style:none;padding:0;margin:0;counter-reset:o;display:flex;flex-direction:column;gap:12px}
+.olsteps li{counter-increment:o;display:flex;gap:12px;font-size:14.5px;align-items:flex-start}
+.olsteps li::before{content:counter(o);width:28px;height:28px;border-radius:50%;background:var(--brasa-suave);color:var(--brasa);font:700 13px var(--mono);display:grid;place-items:center;flex:none}
+
+/* Acordeones */
+.acc{background:#fff;border:1px solid var(--linea);border-radius:var(--r);margin-bottom:12px;box-shadow:var(--sombra);overflow:hidden}
+.acc>summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;align-items:center;gap:12px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .ai{width:36px;height:36px;border-radius:10px;background:var(--papel);color:var(--acero);display:grid;place-items:center;flex:none}
+.acc[open]>summary .ai{background:var(--tinta);color:#fff}
+.acc>summary b{font-family:var(--display);font-size:17px;display:block}
+.acc>summary small{display:block;color:var(--gris);font-size:13px}
+.acc>summary .chev{margin-left:auto;transition:transform .2s;color:var(--acero-claro)}
+.acc[open]>summary .chev{transform:rotate(180deg)}
+.acc .inner{padding:4px 18px 18px;border-top:1px solid var(--linea-2)}
+.acc .inner>*:first-child{margin-top:14px}
+.prompt-ta{font-family:var(--mono);font-size:12.3px;min-height:130px;background:#FBFDFE}
+
+/* Resumen lateral */
+.sum h3{margin-bottom:10px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:var(--papel);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font:800 24px var(--display);letter-spacing:-.02em;line-height:1.1}
+.stat span{font-size:12.3px;color:var(--gris)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.checks li{display:flex;gap:9px;align-items:center;color:var(--gris)}
+.checks li .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--linea);display:grid;place-items:center;flex:none}
+.checks li.on{color:var(--tinta)}
+.checks li.on .ck{background:var(--forjado);border-color:var(--forjado);color:#fff}
+.checks li .ck svg{width:12px;height:12px}
+.docname{margin-top:14px;padding:11px 13px;border-radius:11px;background:var(--tinta);color:#C3D3E2;font-size:13.5px}
+.docname b{color:#fff}
+
+/* Generación */
+.agents{display:flex;flex-direction:column;gap:10px}
+.agent{background:#fff;border:1px solid var(--linea);border-radius:var(--r);box-shadow:var(--sombra);overflow:hidden;transition:border-color .2s}
+.agent-h{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer}
+.agent .ai{width:42px;height:42px;border-radius:12px;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;flex:none;transition:all .2s}
+.agent .ai svg{width:20px;height:20px}
+.agent-t{flex:1;min-width:0}
+.agent-t b{display:block;font-family:var(--display);font-size:16.5px}
+.agent-t span{display:block;font-size:13px;color:var(--gris)}
+.pill{font-size:12.5px;font-weight:700;border-radius:999px;padding:4px 10px;background:var(--linea-2);color:var(--gris);white-space:nowrap}
+.agent[data-s="run"]{border-color:#F59E0B}
+.agent[data-s="run"] .ai{background:var(--c);color:#fff;animation:pulse 1s infinite alternate}
+.agent[data-s="run"] .pill{background:#FFF1D6;color:#8A5A00}
+.agent[data-s="ok"] .ai{background:var(--c);color:#fff}
+.agent[data-s="ok"] .pill{background:var(--forjado-suave);color:var(--forjado)}
+.agent[data-s="err"]{border-color:var(--brasa)}
+.agent[data-s="err"] .pill{background:var(--brasa-suave);color:var(--brasa)}
+.agent-b{display:none;padding:4px 18px 16px 72px;font-size:14px;border-top:1px solid var(--linea-2);background:#FBFDFE}
+.agent.open .agent-b{display:block}
+@media(max-width:600px){.agent-b{padding-left:18px}}
+@keyframes pulse{from{transform:scale(1);box-shadow:0 0 0 0 rgba(228,87,46,.5)}to{transform:scale(1.06);box-shadow:0 0 0 10px rgba(228,87,46,0)}}
+.forging{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;background:var(--tinta);color:#fff;margin-bottom:16px}
+.forging .spark{width:44px;height:44px;border-radius:12px;background:var(--brasa);display:grid;place-items:center;flex:none;animation:pulse 1s infinite alternate}
+.forging.done .spark{background:var(--forjado);animation:none}
+.forging.err .spark{animation:none}
+.forging b{font-family:var(--display);font-size:18px;display:block}
+.forging span{font-size:14px;color:#C3D3E2}
+.mini-list{margin:10px 0 0;padding:0;list-style:none}
+.mini-list li{padding:5px 0;border-bottom:1px solid var(--linea-2)}
+.mini-list li:last-child{border-bottom:0}
+.code{display:inline-block;font:700 11px var(--mono);border-radius:5px;padding:1px 6px;margin-right:6px;background:var(--linea-2);color:var(--acero)}
+
+/* Guía */
+.res-head{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.res-head h2{font-family:var(--display);font-weight:800;font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;margin:0;flex:1;min-width:240px;line-height:1.1}
+.doc{background:#fff;border:1px solid var(--linea);border-radius:18px;box-shadow:var(--sombra-alta);padding:40px 44px;max-width:900px;margin:0 auto}
+@media(max-width:700px){.doc{padding:22px 16px}}
+.doc-h{border-bottom:3px solid var(--tinta);padding-bottom:18px;margin-bottom:26px}
+.doc-kind{font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--brasa);margin:0 0 6px}
+.doc-h h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.4vw,36px);letter-spacing:-.025em;line-height:1.05;margin:0 0 12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.meta span{font-size:12.8px;font-weight:600;background:var(--papel);color:var(--acero);border-radius:999px;padding:4px 11px}
+.dsec{margin-bottom:28px}
+.dsec h2{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.dsec h2 .num{width:28px;height:28px;border-radius:8px;background:var(--tinta);color:#fff;font:700 13px var(--mono);display:grid;place-items:center;flex:none}
+.dsec p{margin:0 0 10px;max-width:75ch}
+.sublab{font-size:13px;font-weight:700;color:var(--acero-claro);margin:14px 0 6px}
+.row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--linea-2);font-size:14.5px;align-items:flex-start}
+.row:last-child{border-bottom:0}
+.row .code{margin-top:2px;flex:none}
+.code.cg{background:#E6F0FA;color:var(--c-ctx)}
+.code.ce{background:#EEEAFB;color:var(--c-comp)}
+.code.bl{background:var(--forjado-suave);color:var(--forjado)}
+.code.tm{background:var(--tinta);color:#fff}
+.row .hrs{margin-left:auto;font-size:12.5px;color:var(--gris);white-space:nowrap}
+.blk{font-weight:700;margin:16px 0 4px;display:flex;gap:8px;align-items:baseline}
+.blk small{font-weight:500;color:var(--gris)}
+.tbl-wrap{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{background:var(--tinta);color:#fff;text-align:left;padding:9px 11px;font-size:12.5px;font-weight:700}
+table.t td{padding:9px 11px;border-bottom:1px solid var(--linea-2);vertical-align:top}
+table.t tr:nth-child(even) td{background:#FAFCFE}
+.peso{font-weight:800;color:var(--brasa);white-space:nowrap}
+.note{margin-top:12px;padding:11px 14px;background:var(--papel);border-left:4px solid var(--forjado);border-radius:8px;font-size:14px}
+.demo-flag{background:#FFF8E6;border:1px solid #F3DDA0;color:#6B4E00;border-radius:12px;padding:11px 15px;font-size:14px;margin:0 auto 16px;max-width:900px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.demo-flag svg{color:#C98200}
+
+/* Navegación inferior */
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--linea)}
+.bn-in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.bn-hint{flex:1;text-align:center;font-size:14px;color:var(--gris)}
+.bn-hint b{color:var(--tinta)}
+@media(max-width:600px){.bn-hint{display:none}.bn-in{justify-content:space-between}}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(15,34,55,.55);display:none;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto}
+.modal.on{display:flex}
+.modal-box{background:#fff;border-radius:18px;max-width:760px;width:100%;box-shadow:var(--sombra-alta);overflow:hidden}
+.modal-head{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--tinta);color:#fff}
+.modal-head h2{font-family:var(--display);font-size:22px;margin:0;flex:1}
+.modal-head button{background:transparent;border:1px solid #4A6787;color:#fff;border-radius:9px;padding:6px 10px}
+.modal-body{padding:18px 20px 22px}
+.glos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.glos{grid-template-columns:1fr}}
+.glos div{background:var(--papel);border-radius:12px;padding:12px 14px}
+.glos b{display:block;font-family:var(--display);font-size:16px;margin-bottom:2px}
+.glos span{font-size:13.8px;color:var(--acero)}
+.hist{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--linea);border-radius:12px;margin-bottom:8px}
+.hist-t{flex:1;min-width:0;cursor:pointer}
+.hist-t b{display:block;font-size:15px}
+.hist-t span{font-size:12.8px;color:var(--gris)}
+.hist:hover{border-color:var(--acero-claro)}
+.iconbtn{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--linea);background:#fff;color:var(--acero);display:grid;place-items:center;padding:0}
+.iconbtn:hover{border-color:var(--brasa);color:var(--brasa)}
+.empty{text-align:center;color:var(--gris);padding:30px 10px}
+
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;padding:11px 18px;border-radius:12px;font-size:14.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:70;max-width:90vw;text-align:center;box-shadow:var(--sombra-alta)}
+.toast.on{opacity:1;transform:translateX(-50%)}
+footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;font-size:13px;color:#6E8299}
+footer hr{border:0;border-top:1px solid var(--linea);margin:0 0 14px}
+
+@media print{
+  body{background:#fff;padding:0}
+  .topbar,.bottomnav,.res-head,.demo-flag,.okbox,footer,.toast,.modal{display:none!important}
+  main{padding:0;max-width:none}
+  .screen{display:none!important}
+  
+  .doc{box-shadow:none;border:0;padding:0;max-width:none}
+  .dsec{break-inside:avoid-page}
+  table.t th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+/* ══ v2 ══ */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.grid3{grid-template-columns:1fr}}
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.feats{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.feats{grid-template-columns:1fr}}
+.feat{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:16px;border-top:4px solid var(--c)}
+.feat .pi{width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;margin-bottom:10px}
+.feat b{display:block;font-family:var(--display);font-size:17px;margin-bottom:3px}
+.feat span{display:block;font-size:13.5px;color:var(--gris);line-height:1.45}
+.importbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--tinta);color:#EAF1F7;border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
+.importbar .pi{width:40px;height:40px;border-radius:11px;background:var(--brasa);display:grid;place-items:center;flex:none}
+.importbar b{display:block;font-size:15px}
+.importbar span{display:block;font-size:13.3px;color:#A9C0D4}
+.importbar .btn-dark{background:#fff;color:var(--tinta)}
+.importbar .btn-dark:hover{background:#EAF1F7}
+.inacc{border-top:1px solid var(--linea-2);margin-top:4px;padding-top:12px}
+.inacc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--acero)}
+.inacc>summary::-webkit-details-marker{display:none}
+.inacc>summary .chev{margin-left:auto;transition:transform .2s;color:var(--acero-claro)}
+.inacc[open]>summary .chev{transform:rotate(180deg)}
+.rec{display:inline-block;font:700 11px var(--texto);background:var(--forjado-suave);color:var(--forjado);border-radius:999px;padding:2px 8px;vertical-align:2px;margin-left:4px}
+.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:560px){.checkgrid{grid-template-columns:1fr}}
+.checkgrid label{display:flex;gap:9px;align-items:center;margin:0;padding:9px 11px;border-radius:10px;background:var(--papel);font-weight:500;color:var(--tinta);cursor:pointer;font-size:14px}
+.checkgrid input{width:18px;height:18px;accent-color:var(--forjado);margin:0}
+.checkgrid label:has(input:checked){background:var(--forjado-suave)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:2px dashed var(--linea);border-radius:14px;padding:24px;cursor:pointer;color:var(--acero);margin:0;font-weight:500}
+.drop svg{width:30px;height:30px;color:var(--brasa)}
+.drop b{font-size:15px;color:var(--tinta)}
+.drop span{font-size:13px;color:var(--gris)}
+.drop.over,.drop:hover{border-color:var(--brasa);background:var(--brasa-suave)}
+
+
+
+/* selector de idioma (65-i18n) */
+.tb-lang{display:flex;align-items:center}.tb-sel{background:transparent;border:1px solid #3E5C7D;color:#C9D8E6;border-radius:9px;padding:6px 8px;font:600 13px var(--texto);cursor:pointer;max-width:120px}.tb-sel:hover{border-color:var(--brasa);color:#fff}.tb-sel:focus-visible{outline:2px solid var(--brasa);outline-offset:2px}.tb-sel option{color:#0F2237;background:#fff}
+/* ══ Estilos propios de la app (se añaden a forja-base.css). Prefijo fa- para no chocar con clases de Forja ══ */
+.logo .anv{background:linear-gradient(135deg,var(--brasa),#C98200)}
+.hero{padding:44px 38px 30px}.hero h1{max-width:20ch}.fa-inicio{margin:14px 0 0;font-size:14px;color:#C3D3E2}.fa-inicio:empty{display:none}.fa-inicio b{color:#fff}
+/* autores con ORCID */
+.fa-autores{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14)}.fa-autores-cap{font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#8FA7BE;width:100%;margin-bottom:-4px}
+.fa-autor{display:flex;gap:11px;align-items:center}.fa-autor b{display:block;color:#fff;font:700 16px var(--display)}.fa-autor small{display:block;color:#9DB6CD;font-size:12.5px;max-width:34ch}.fa-av{width:44px;height:44px;border-radius:14px;background:var(--c);color:#fff;display:grid;place-items:center;font:800 15px var(--display);flex:none;box-shadow:0 10px 20px -12px var(--c)}.fa-x{font:300 26px var(--display);color:#5D7C9B}
+.fa-orcid{display:block;margin-top:2px;font:600 11.5px var(--mono);letter-spacing:.02em;color:#7FD6C4!important;text-decoration:none}.fa-orcid:hover{text-decoration:underline}.fa-idea{width:100%;margin:2px 0 0;font-size:13px;color:#9DB6CD;max-width:72ch}
+/* zonas «dónde va cada cosa» */
+.zonas{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.zonas{grid-template-columns:1fr}}.zona{border-radius:16px;padding:14px 16px;border:2px solid}.zona.l{border-color:#9FD9C4;background:var(--forjado-suave)}.zona.n{border-color:#E9C46A;background:#FFF8E6}.zona h4{margin:0 0 6px;font-family:var(--display);font-size:18px}.zona ul{margin:0;padding-left:18px;font-size:14px;line-height:1.7}
+.sec-title+.zonas,.sec-title+.journey{margin-top:14px}
+/* formularios y utilidades */
+.field input[type=text],.field input[type=number],.field select,.field textarea{width:100%;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;font:15px var(--texto);background:#fff;color:var(--tinta)}.field textarea{line-height:1.55;resize:vertical}.field label{display:block;font:700 13px var(--texto);color:var(--acero);margin-bottom:5px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--brasa);box-shadow:0 0 0 3px rgba(228,87,46,.18)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.grid3,.grid2{grid-template-columns:1fr}}
+.card .actions{margin-top:12px}.card h3{margin-top:0}.fa-chk{display:flex;gap:8px;align-items:center;font:500 14.5px var(--texto);cursor:pointer}
+.fa-chip{display:inline-block;font:700 11.5px var(--texto);border-radius:999px;padding:3px 10px;background:var(--linea-2);color:var(--acero)}.fa-chip.ok{background:var(--forjado-suave);color:#0B5A4E}.fa-chip.aviso{background:#FFF1D6;color:#7A4B00}.fa-chip.error{background:var(--brasa-suave);color:var(--aviso)}
+.fa-pre{white-space:pre-wrap;font:12.5px/1.5 var(--mono);background:#0B1C2E;color:#D6E4F0;border-radius:12px;padding:12px;max-height:300px;overflow:auto}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--linea);border-top-color:var(--brasa);border-radius:50%;animation:fa-s .8s linear infinite;vertical-align:-2px}@keyframes fa-s{to{transform:rotate(360deg)}}
+.fa-foot{max-width:1180px;margin:10px auto 0;padding:0 16px 110px}.fa-foot hr{border:0;border-top:1px solid var(--linea);margin:0 0 16px}.fa-foot p{margin:0;font-size:12.8px;color:#6E8299;max-width:76ch;line-height:1.55}
+.glos div{display:block;margin-bottom:12px}.glos b{display:block}
+table{border-collapse:collapse;width:100%;font-size:13.8px}th{background:var(--papel);color:var(--acero);font:700 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;text-align:left}td,th{padding:10px 12px;border-bottom:1px solid var(--linea-2);vertical-align:top}.table-wrap{overflow-x:auto}
+/* barra superior con muchos pasos: solo el actual lleva nombre (evita desbordes) */
+.tb-in{gap:10px}.stepper{min-width:0;flex:1 1 auto;justify-content:center;gap:2px}.sdot:not([data-state="now"]) .lbl{display:inline}.sdot{padding-left:4px;padding-right:4px}.sline{min-width:8px;flex:0 1 22px}.logo,.tb-tools{flex:none}
+@media(max-width:900px){.tb-btn .lbl{display:none}}@media(max-width:720px){.hero{padding:28px 20px 24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ── AnamnesIA ── */
+.a-f3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 12px}
+.a-tecs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 18px}.a-tec{align-items:flex-start;padding:6px 0}
+.a-q{padding:10px 0;border-bottom:1px solid #eef1f5}.a-q:last-child{border-bottom:0}.a-pend legend{font-weight:600}
+.a-sn{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}.a-sn legend{float:left;width:100%;padding:0 0 6px;font-size:15.5px}
+.a-sn label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px;padding:2px 12px 2px 8px;border:1px solid #dfe4ec;border-radius:999px;background:#fff}
+.a-sn label:has(input:checked){border-color:#2E4B6B;background:#eef3f8;font-weight:600}
+.a-det{margin-top:8px;width:100%}.a-prog{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0 14px}
+.a-sem{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px}
+.a-st{margin:0;border-top:5px solid #0E8C7A}.a-n1{border-top-color:#C98200}.a-n2{border-top-color:#B3203A}
+.a-sth{display:flex;gap:12px;align-items:flex-start}.a-sth>.i{width:26px;height:26px;flex:0 0 26px;margin-top:2px}.a-sth b{display:block;font-size:17px;margin-bottom:6px}
+.a-n0 .a-sth>.i{color:#0E8C7A}.a-n1 .a-sth>.i{color:#9a6200}.a-n2 .a-sth>.i{color:#B3203A}
+.a-falta{border-left:5px solid #C98200}.a-pre{white-space:pre-wrap;max-height:420px;overflow:auto}
+@media (max-width:760px){.a-f3{grid-template-columns:1fr 1fr}}@media (max-width:460px){.a-f3{grid-template-columns:1fr}}
+.sdot{position:relative}.sdot .lbl{display:inline}.sdot:not([data-state="now"]) .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:root{--gris:#4A6075;--brasa:#C4441E;--brasa-osc:#A93918}.sh-step{color:#4A6075}.fa-foot p{color:#4A6075}
+input[type=checkbox],input[type=radio]{min-width:22px;min-height:22px}.fa-chk{min-height:24px}
+.a-doc{border:1px solid #dfe4ec;border-radius:12px;padding:6px 18px 14px;max-height:520px;overflow:auto;background:#fbfcfe}.a-doc h4{margin:14px 0 6px}.a-li{margin:3px 0;padding-left:14px;position:relative}.a-li::before{content:"·";position:absolute;left:3px;font-weight:700}
+</style></head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></symbol>
+  <symbol id="i-quiz" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M17 5h4M5 17v4M3 19h4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M6 14l1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></symbol>
+<symbol id="i-alerta" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5h.01"/></g></symbol>
+</svg>
+<div class="topbar">
+  <div class="tb-in">
+    <button class="logo" id="goHome" type="button" aria-label="Inicio" data-i18n-attr="aria-label:Inicio"><span class="anv"><svg class="i"><use href="#i-form"/></svg></span><span>Anamnes<em>IA</em></span></button>
+    <nav class="stepper" id="stepper" aria-label="Pasos" data-i18n-attr="aria-label:Pasos"></nav>
+    <div class="tb-tools"><div class="tb-lang" id="langBox"><select id="selLang" class="tb-sel" aria-label="Idioma" data-i18n-attr="aria-label:Idioma"></select></div><button class="tb-btn" id="btnHelp" type="button"><svg class="i"><use href="#i-help"/></svg><span class="lbl" data-i18n="Ayuda">Ayuda</span></button></div>
+  </div>
+  <div class="progress"><span id="progBar"></span></div>
+</div>
+
+<main id="app">
+<!-- 0 · INICIO: portada con el qué, el para quién y los autores -->
+<section class="screen" data-step="0">
+  <div class="hero">
+    <p class="eyebrow" data-i18n="hero.eyebrow">Kit EstéticIA · Máster de Medicina Estética Integral y Antienvejecimiento · Universidad Miguel Hernández de Elche</p>
+    <h1 data-i18n="hero.h1">La primera visita, <em>sin olvidar nada</em></h1>
+    <p class="lede" data-i18n="hero.lede">Marca las técnicas que plantea el paciente y la app te pregunta solo lo que importa para ellas. Cada respuesta se cruza con las contraindicaciones de cada técnica, con reglas fijas que te explican el porqué, y el resumen para la historia clínica sale solo. Sin IA y sin conexión.</p>
+    <div class="actions"><button class="btn btn-primary btn-big" id="btnStart" type="button"><svg class="i"><use href="#i-play"/></svg><span data-i18n="s.empezar">Empezar</span></button><button class="btn btn-ghost btn-big" id="btnEjemplo" type="button"><svg class="i"><use href="#i-eye"/></svg><span data-i18n="s.ejemplo">Ver un ejemplo</span></button></div>
+    <p class="fa-inicio" id="inicioProj"></p>
+    <div class="fa-autores"><span class="fa-autores-cap" data-i18n="Realizada entre">Realizada entre</span>
+      <div class="fa-autor"><span class="fa-av" style="--c:#E4572E">FB</span><div><b>Fernando Borrás Rocher</b><small>Universidad Miguel Hernández de Elche</small><a class="fa-orcid" href="https://orcid.org/0000-0002-5519-4573" target="_blank" rel="noopener">ORCID 0000-0002-5519-4573</a></div></div><span class="fa-x">×</span>
+      <div class="fa-autor"><span class="fa-av" style="--c:#0E8C7A">EC</span><div><b>Elena Caride Miana</b><small>Dra. Caride Medicina Estética &amp; Antiaging</small><a class="fa-orcid" href="https://orcid.org/0000-0002-7620-4857" target="_blank" rel="noopener">ORCID 0000-0002-7620-4857</a></div></div>
+      <p class="fa-idea">Segunda app del Kit EstéticIA, diseñado para el alumnado del Máster de Formación Permanente en Medicina Estética Integral y Antienvejecimiento (UMH).</p></div>
+  </div>
+  <h2 class="sec-title" data-i18n="Cómo funciona">Cómo funciona</h2>
+  <div class="journey" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+    <div class="jstop" style="--c:#6B4FD8"><span class="jn">1</span><div class="ji"><svg class="i"><use href="#i-user"/></svg></div><b data-i18n="s.j1b">Paciente y técnicas</b><span data-i18n="s.j1s">Marcas lo que plantea y el porqué de la consulta.</span></div>
+    <div class="jstop" style="--c:#E4572E"><span class="jn">2</span><div class="ji"><svg class="i"><use href="#i-form"/></svg></div><b data-i18n="s.j2b">Solo lo que importa</b><span data-i18n="s.j2s">Las preguntas cambian con las técnicas elegidas.</span></div>
+    <div class="jstop" style="--c:#C98200"><span class="jn">3</span><div class="ji"><svg class="i"><use href="#i-eye"/></svg></div><b data-i18n="s.j3b">Expectativas y cribado</b><span data-i18n="s.j3s">Señales de trastorno dismórfico corporal y lo que espera.</span></div>
+    <div class="jstop" style="--c:#0E8C7A"><span class="jn">4</span><div class="ji"><svg class="i"><use href="#i-doc"/></svg></div><b data-i18n="s.j4b">Semáforo y resumen</b><span data-i18n="s.j4s">Cada técnica con su porqué y el texto para la historia.</span></div>
+  </div>
+  <h2 class="sec-title" data-i18n="Dónde va cada cosa">Dónde va cada cosa</h2>
+  <div class="zonas"><div class="zona l"><h4 data-i18n="Siempre en tu ordenador">Siempre en tu ordenador</h4><ul data-i18n="s.zl">
+<li>Las respuestas, los resúmenes y las fichas, guardados en este navegador</li><li>Las reglas se aplican aquí mismo: la app no usa IA ni conexión</li><li>Usa un identificador en lugar del nombre del paciente</li></ul></div></div>
+</section>
+
+<section class="screen" data-step="1">
+  <header class="sh" style="--c:#6B4FD8"><div class="sh-ico"><svg class="i"><use href="#i-user"/></svg></div><div><p class="sh-step" data-i18n="Paso 1 de 4">Paso 1 de 4</p><h2 data-i18n="Paciente y técnicas">Paciente y técnicas</h2><p class="sh-lede" data-i18n="s.pac.lede">Identifica al paciente sin su nombre, anota el motivo y marca las técnicas que se plantean: de ellas dependen las preguntas.</p></div></header>
+  <div id="pacBox"></div>
+</section>
+<section class="screen" data-step="2">
+  <header class="sh" style="--c:#E4572E"><div class="sh-ico"><svg class="i"><use href="#i-form"/></svg></div><div><p class="sh-step" data-i18n="Paso 2 de 4">Paso 2 de 4</p><h2 data-i18n="Antecedentes">Antecedentes</h2><p class="sh-lede" data-i18n="s.ant.lede">Solo las preguntas que importan para las técnicas marcadas, más las que se hacen siempre. Responde sí o no a cada una.</p></div></header>
+  <div id="antBox"></div>
+</section>
+<section class="screen" data-step="3">
+  <header class="sh" style="--c:#C98200"><div class="sh-ico"><svg class="i"><use href="#i-eye"/></svg></div><div><p class="sh-step" data-i18n="Paso 3 de 4">Paso 3 de 4</p><h2 data-i18n="Expectativas y cribado">Expectativas y cribado</h2><p class="sh-lede" data-i18n="s.exp.lede">Lo que espera el paciente, si es realista y las señales de alarma de trastorno dismórfico corporal.</p></div></header>
+  <div id="expBox"></div>
+</section>
+<section class="screen" data-step="4">
+  <header class="sh" style="--c:#0E8C7A"><div class="sh-ico"><svg class="i"><use href="#i-check"/></svg></div><div><p class="sh-step" data-i18n="Paso 4 de 4">Paso 4 de 4</p><h2 data-i18n="Resultado">Resultado</h2><p class="sh-lede" data-i18n="s.res.lede">Cada técnica con su semáforo y el porqué. El resumen para la historia clínica está listo para descargar o copiar.</p></div></header>
+  <div id="resBox"></div>
+</section>
+</main>
+
+<footer class="fa-foot"><hr><p><b>AnamnesIA</b> · Fernando Borrás Rocher · Elena Caride Miana · Universidad Miguel Hernández de Elche; Dra. Caride Medicina Estética & Antiaging. <span data-i18n="f.pie">Herramienta de apoyo para médicos: las reglas resumen contraindicaciones habituales y no sustituyen a la ficha técnica de tu producto ni al juicio clínico. Tus datos se guardan solo en este navegador.</span></p></footer>
+<div class="bottomnav"><div class="bn-in"><button class="btn btn-ghost" id="navBack" type="button"><svg class="i"><use href="#i-left"/></svg><span data-i18n="Atrás">Atrás</span></button><div class="bn-hint" id="navHint"></div><button class="btn btn-primary" id="navNext" type="button"><span id="navNextTxt">Siguiente</span><svg class="i"><use href="#i-right"/></svg></button></div></div>
+
+
+<div class="modal" id="mHelp" role="dialog" aria-modal="true" aria-labelledby="mHelpT"><div class="modal-box"><div class="modal-head"><h2 id="mHelpT" data-i18n="Ayuda">Ayuda</h2><button type="button" data-close data-i18n="Cerrar">Cerrar</button></div><div class="modal-body"><div class="glos" id="glos"></div></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>const APP="anamnesia";const APP_NAME="AnamnesIA";const LOGO_ICON="form";const LANGS_ON=["es", "en", "pt"];
+"use strict";
+/* ── utilidades comunes (todas las apps Forja) ──────────────────────────────
+   Requiere que la app defina antes:  const APP = 'miapp';  (prefijo de almacenamiento)  */
+const $ = id => document.getElementById(id), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ico = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const uid = (p = '') => p + Math.random().toString(36).slice(2, 8);
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const wc = s => (String(s || '').trim().match(/[\p{L}\p{N}]+/gu) || []).length;
+const chunk = (a, n) => { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; };
+const nf = n => Math.round(n).toLocaleString(typeof locale === 'function' ? locale() : 'es-ES');
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const slug = s => norm(s).replace(/ /g, '_').slice(0, 40) || 'x';
+function toast(m, ms = 4200) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms); }
+function dl(nombre, contenido, tipo) { const b = contenido instanceof Blob ? contenido : new Blob([contenido], {type: tipo}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2500); }
+
+/* librerías externas (solo para LEER ficheros: Word, PDF, PowerPoint). Escribir Word/ZIP no necesita ninguna (70-report).
+   Cada librería tiene un espejo: si cdnjs falla (URL retirada, bloqueador, proxy), se prueba jsDelivr con la misma versión.
+   La CSP de build.py admite los dos orígenes. Las URLs están comprobadas contra el paquete npm de esa versión. */
+const LIB = {
+  mammoth: 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+  jszip: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  pdf: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  pdfw: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  docx: 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js'   // obsoleto: usa wordDeMarkdown / wordDeXml (sin red)
+};
+const LIB_ESPEJO = {
+  [LIB.mammoth]: 'https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js',
+  [LIB.jszip]: 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+  [LIB.pdf]: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+  [LIB.pdfw]: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+};
+const LIB_GLOBAL = {[LIB.mammoth]: 'mammoth', [LIB.jszip]: 'JSZip', [LIB.pdf]: 'pdfjsLib', [LIB.docx]: 'docx'};
+const _libNombre = u => (u.match(/\/(?:libs|npm)\/([^/@]+)/) || [, 'externa'])[1];
+const _cargaScript = u => new Promise((ok, ko) => { const s = document.createElement('script'); s.src = u; const tm = setTimeout(() => { s.remove(); ko(); }, 20000); s.onload = () => { clearTimeout(tm); ok(); }; s.onerror = () => { clearTimeout(tm); s.remove(); ko(); }; document.head.appendChild(s); });
+const _libCargadas = {};
+/* cargaLib([LIB.x, …]) carga en orden; cada una prueba cdnjs y luego su espejo; no recarga lo ya cargado */
+async function cargaLib(urls) {
+  for (const u of urls) {
+    const g = LIB_GLOBAL[u]; if ((g && window[g]) || _libCargadas[u]) continue;
+    let hecho = false, v_ok = u;
+    for (const v of [u, LIB_ESPEJO[u]].filter(Boolean)) { try { await _cargaScript(v); hecho = true; v_ok = v; break; } catch {} }
+    if (!hecho) throw new Error(navigator.onLine === false ? t('Sin conexión: hace falta internet para abrir este tipo de fichero la primera vez.') : t('No se pudo cargar la librería {0}. Puede que un bloqueador o la red de tu institución la impida; prueba otra red o desactiva el bloqueador en esta página.', _libNombre(u)));
+    _libCargadas[u] = v_ok;
+  }
+}
+
+/* huella SHA-256 (con alternativa para file:// sin contexto seguro) y canonización estable */
+const canon = v => v === null || typeof v !== 'object' ? JSON.stringify(v) : Array.isArray(v) ? '[' + v.map(canon).join(',') + ']' : '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+function sha256js(bytes) {
+  const pr = []; for (let n = 2; pr.length < 64; n++) if (pr.every(p => n % p)) pr.push(n);
+  const fr = x => Math.floor((x - Math.floor(x)) * 4294967296), K = pr.map(p => fr(Math.cbrt(p))), H = pr.slice(0, 8).map(p => fr(Math.sqrt(p)));
+  const l = bytes.length, pad = new Uint8Array(((l + 9 + 63) >> 6) << 6); pad.set(bytes); pad[l] = 0x80;
+  const dv = new DataView(pad.buffer); dv.setUint32(pad.length - 8, Math.floor(l * 8 / 4294967296)); dv.setUint32(pad.length - 4, (l * 8) >>> 0);
+  const rr = (x, n) => (x >>> n) | (x << (32 - n)), W = new Uint32Array(64);
+  for (let i = 0; i < pad.length; i += 64) {
+    for (let t = 0; t < 16; t++) W[t] = dv.getUint32(i + t * 4);
+    for (let t = 16; t < 64; t++) { const s0 = rr(W[t - 15], 7) ^ rr(W[t - 15], 18) ^ (W[t - 15] >>> 3), s1 = rr(W[t - 2], 17) ^ rr(W[t - 2], 19) ^ (W[t - 2] >>> 10); W[t] = (W[t - 16] + s0 + W[t - 7] + s1) >>> 0; }
+    let [a, b, c, d, e, f, g, hh] = H;
+    for (let t = 0; t < 64; t++) { const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25), ch = (e & f) ^ (~e & g), t1 = (hh + S1 + ch + K[t] + W[t]) >>> 0, S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22), mj = (a & b) ^ (a & c) ^ (b & c), t2 = (S0 + mj) >>> 0; hh = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0; }
+    [a, b, c, d, e, f, g, hh].forEach((v, j) => H[j] = (H[j] + v) >>> 0);
+  }
+  return H.map(v => v.toString(16).padStart(8, '0')).join('');
+}
+async function sha256(str) {
+  const b = new TextEncoder().encode(str);
+  if (window.crypto?.subtle) { try { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', b))].map(x => x.toString(16).padStart(2, '0')).join(''); } catch {} }
+  return sha256js(b);
+}
+
+/* ── persistencia local (IndexedDB). La app define:  let S = {...};  y opcionalmente  const KEYP = () => 'main';  ── */
+const dbP = new Promise((ok, ko) => { const r = indexedDB.open(APP, 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+const kv = async (mode, fn) => { const d = await dbP; return new Promise((ok, ko) => { const tx = d.transaction('kv', mode), q = fn(tx.objectStore('kv')); tx.oncomplete = () => ok(q && q.result); tx.onerror = () => ko(tx.error); }); };
+const _key = () => (typeof KEYP === 'function' ? KEYP() : 'main');
+let _g;
+function guarda() { clearTimeout(_g); _g = setTimeout(() => kv('readwrite', s => s.put(S, _key())).catch(() => toast(t('No se pudo guardar en el navegador (¿demasiado material?)'))), 500); }
+/* guardado inmediato: úsalo justo después de pagar una llamada a la IA, para no perder el resultado si se cierra la pestaña */
+const guardaYa = () => { clearTimeout(_g); return kv('readwrite', s => s.put(S, _key())).catch(() => toast(t('No se pudo guardar en el navegador'))); };
+window.addEventListener('pagehide', () => { clearTimeout(_g); try { kv('readwrite', s => s.put(S, _key())); } catch {} });
+async function cargaEstado(key = _key()) { try { const p = await kv('readonly', s => s.get(key)); return p || null; } catch { return null; } }
+
+/* ── navegación Forja: barra superior, stepper, barra inferior, ventanas, ayuda y ajustes de IA ─────────────
+   La app define (en app.js; se leen al ejecutar, no al cargar el módulo) y llama a iniciaUI() al arrancar:
+     const STEPS  = ['Inicio', 'Paso 1', ...];                   // etiquetas del stepper (la actual se muestra con nombre)
+     const NAV    = [['Empezar',''], ['Siguiente: …','pista'], …]; // [texto del botón «siguiente», pista de la barra inferior] por pantalla
+     const RENDER = {0: pintaInicio, 1: pintaX, …};               // funciones que pintan cada pantalla al entrar
+     const GLOS   = [['Título','Texto'], …];                       // ayuda
+   Idiomas: STEPS, NAV, GLOS y HUBS se escriben en español y se traducen con t() (módulo 65-i18n; diccionario I18N en src/i18n.js).
+   Opcionales:  const CAN_NEXT = i => true|'mensaje';  // validación antes de avanzar
+                const HUBS = ['Glosario', 'Progreso'];  // secciones fuera del recorrido lineal: pantallas con data-step = STEPS.length + k.
+                // Al entrar en una sección el stepper muestra solo su nombre, la barra de progreso se vacía y «Atrás»/«Siguiente» vuelven al inicio. */
+let step = 0;
+const esHub = i => i >= STEPS.length;
+function buildStepper() {
+  if (esHub(step)) {
+    const nombre = (typeof HUBS !== 'undefined' && HUBS[step - STEPS.length]) || '';
+    $('stepper').innerHTML = `<button class="sdot" type="button" data-go="0" data-state="done"><span class="n">${ico('left')}</span><span class="lbl">${esc(t('Inicio'))}</span></button><span class="sline on"></span><button class="sdot" type="button" data-state="now" aria-current="page"><span class="n">${ico(typeof LOGO_ICON === 'string' ? LOGO_ICON : 'bulb')}</span><span class="lbl">${esc(t(nombre))}</span></button>`;
+    $$('#stepper [data-go]').forEach(b => b.onclick = () => go(+b.dataset.go)); return;
+  }
+  $('stepper').innerHTML = STEPS.map((s, i) => `${i ? `<span class="sline${i <= step ? ' on' : ''}"></span>` : ''}<button class="sdot" type="button" data-go="${i}" data-state="${i < step ? 'done' : i === step ? 'now' : ''}" ${i === step ? 'aria-current="step"' : ''}><span class="n">${i < step ? ico('check') : i === 0 ? ico(typeof LOGO_ICON === 'string' ? LOGO_ICON : 'bulb') : i}</span><span class="lbl">${esc(t(s))}</span></button>`).join('');
+  $$('#stepper [data-go]').forEach(b => b.onclick = () => go(+b.dataset.go));
+}
+function updateNav() { const N = NAV[step] || ['Volver al inicio', '']; $('navBack').classList.toggle('hidden', step === 0 || esHub(step)); $('navNextTxt').textContent = t(N[0]); $('navHint').textContent = N[1] ? t(N[1]) : ''; }
+function go(i) {
+  step = i; $$('.screen').forEach(s => s.classList.toggle('on', +s.dataset.step === i)); $('progBar').style.width = esHub(i) ? '0%' : (i / (STEPS.length - 1) * 100) + '%';
+  (RENDER[i] || (() => {}))(); buildStepper(); updateNav(); window.scrollTo({top: 0, behavior: 'instant'});
+}
+$('goHome').onclick = () => go(0);
+$('navBack').onclick = () => { if (step > 0) go(step - 1); };
+$('navNext').onclick = () => { if (esHub(step)) return go(0); const ok = typeof CAN_NEXT === 'function' ? CAN_NEXT(step) : true; if (ok !== true && ok) return toast(ok); go(step === STEPS.length - 1 ? 0 : step + 1); };
+
+/* ventanas modales (Escape y clic fuera cierran; data-close en el botón) */
+const _cierres = {};   // id de modal → función a ejecutar al cerrar
+$$('.modal').forEach(m => m.addEventListener('click', ev => { if (ev.target === m || ev.target.hasAttribute('data-close')) { m.classList.remove('on'); _cierres[m.id]?.(); } }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('.modal.on').forEach(m => { m.classList.remove('on'); _cierres[m.id]?.(); }); });
+/* Ajustes de IA. El modelo se elige en un <select> (no en <input list>: un <datalist> con el campo ya relleno solo muestra
+   las opciones que coinciden con lo escrito, y la lista «no se carga» a ojos de la persona). «Otro modelo…» abre un campo libre. */
+const OTRO_MODELO = '__otro';
+function pintaModelos(pv = getProv()) {
+  const sel = $('selModelo'); if (!sel) return;
+  let ml = []; try { ml = JSON.parse(localStorage.getItem(APP + '_models_' + pv) || '[]'); } catch {}
+  const act = getMod(pv), lista = [...new Set([act, ...ml, PROV[pv].m])].filter(Boolean);
+  sel.innerHTML = lista.map(m => `<option value="${esc(m)}">${esc(m)}${m === act ? ' · ' + esc(t('actual')) : ''}${ml.length && !ml.includes(m) ? ' · ' + esc(t('no aparece en tu clave')) : ''}</option>`).join('')
+    + `<option value="${OTRO_MODELO}">${esc(t('Otro modelo (escribirlo)…'))}</option>`;
+  sel.value = act; $('modelo').value = act; $('modelo').hidden = true;
+}
+function cargaIA() { const pv = getProv(); $('selProv').value = pv; $('apiKey').value = getKey(pv); $('apiKey').placeholder = KPH[pv]; pintaModelos(pv); }
+/* pide a la API del proveedor los modelos de ESA clave y los pone en el desplegable (silencio: sin mensaje si falta la clave) */
+async function cargaModelos(silencio = false) {
+  const st = $('iaEstado'), pv = getProv();
+  if (!getKey(pv)) { if (!silencio) st.textContent = t('Primero pega tu clave.'); return []; }
+  st.textContent = t('Cargando los modelos de tu clave…');
+  try {
+    const l = await listaModelos(pv); if (pv !== getProv()) return l;
+    localStorage.setItem(APP + '_models_' + pv, JSON.stringify(l)); pintaModelos(pv);
+    st.textContent = l.length ? t('{0} modelos disponibles en tu clave: elígelo en el desplegable.', l.length) : t('Tu clave no devolvió ningún modelo de texto. Escribe el nombre con «Otro modelo».');
+    return l;
+  } catch (e) { st.textContent = e.message; return []; }
+}
+const KPH = {openai: 'sk-proj-…', gemini: 'AIza…', anthropic: 'sk-ant-…'};
+/* iniciaUI(): llámala UNA vez desde app.js, al final, justo antes de go(0). Enlaza la ayuda y los ajustes de IA.
+   (No se hace al cargar el módulo porque GLOS y el resto de constantes de la app aún no existen en ese momento.) */
+function iniciaUI() {
+  if (typeof initI18n === 'function') initI18n();
+  window.addEventListener('langchange', () => { if ($('btnHelp')) $('glos').innerHTML = (typeof GLOS !== 'undefined' ? GLOS : []).map(g => `<div><b>${esc(t(g[0]))}</b><span>${esc(t(g[1]))}</span></div>`).join(''); (RENDER[step] || (() => {}))(); buildStepper(); updateNav(); if ($('mIA') && $('mIA').classList.contains('on')) cargaIA(); });
+  if ($('btnHelp')) { $('glos').innerHTML = (typeof GLOS !== 'undefined' ? GLOS : []).map(g => `<div><b>${esc(t(g[0]))}</b><span>${esc(t(g[1]))}</span></div>`).join(''); $('btnHelp').onclick = () => $('mHelp').classList.add('on'); }
+  if ($('btnIA')) {
+    const sinLista = () => { try { return !JSON.parse(localStorage.getItem(APP + '_models_' + getProv()) || '[]').length; } catch { return true; } };
+    $('selProv').onchange = () => { localStorage.setItem(APP + '_prov', $('selProv').value); cargaIA(); if (getKey() && sinLista()) cargaModelos(true); };
+    let _kt; $('apiKey').oninput = () => { const pv = getProv(); localStorage.setItem(PROV[pv].k, $('apiKey').value.trim()); localStorage.removeItem(APP + '_models_' + pv); clearTimeout(_kt); _kt = setTimeout(() => { if ($('apiKey').value.trim().length >= 20) cargaModelos(true); }, 900); };
+    $('selModelo').onchange = () => { const v = $('selModelo').value; if (v === OTRO_MODELO) { $('modelo').hidden = false; $('modelo').value = ''; $('modelo').focus(); return; } $('modelo').hidden = true; localStorage.setItem(APP + '_model_' + getProv(), v); };
+    $('modelo').oninput = () => localStorage.setItem(APP + '_model_' + getProv(), $('modelo').value.trim() || PROV[getProv()].m);
+    $('modelo').onchange = () => pintaModelos();
+    $('btnEye').onclick = () => { const k = $('apiKey'); k.type = k.type === 'password' ? 'text' : 'password'; };
+    $('btnModelos').onclick = () => cargaModelos(false);
+    $('btnIA').onclick = () => { cargaIA(); $('mIA').classList.add('on'); if (getKey() && sinLista()) cargaModelos(true); };
+  }
+}
+/* ¿hay clave? si no, abre los ajustes de IA y avisa */
+function pideClave() { if (getKey()) return true; if ($('mIA')) { cargaIA(); $('mIA').classList.add('on'); } toast(t('Pega tu clave de IA para continuar')); return false; }
+
+/* ── idiomas: español (por defecto), inglés y portugués; opcionales: català, euskara y galego (app.json → langs) ─────────────────────────────────────────────────
+   El español es el idioma de origen: está escrito en el HTML y en el JS. Las demás lenguas se traducen con diccionarios.
+   Dos formas de marcar texto traducible (una sola función, t(), y un diccionario por idioma):
+     · HTML estático:   <span data-i18n="clave">Texto en español</span>
+                        <input data-i18n-attr="placeholder:clave;aria-label:otra" placeholder="…">
+       En español se conserva el texto del HTML; en los demás idiomas se sustituye por I18N[lang][clave] (HTML de confianza: nunca metas
+       datos de la persona en el diccionario). Envuelve en <span> solo el texto, no los iconos ni los botones enteros.
+     · JavaScript:      t('Texto en español con {0} huecos', valor)   → la propia frase en español es la clave (estilo gettext)
+                        t('msg.clave')                                → clave corta; su texto en español va en I18N.es['msg.clave']
+   La app define (en src/i18n.js, se lee al ejecutar):   const I18N = {en: {…}, pt: {…}, es: {…solo claves cortas…}};
+   Este módulo trae I18N_BASE con todo lo que ponen los módulos de Forja (errores de IA, ajustes, avisos); la app puede sobrescribirlo.
+   build.py inyecta  const LANGS_ON = ["es","en","pt"]  desde app.json → langs  (con un solo idioma el selector no se muestra).
+   Reglas que evitan fallos reales:
+     · Guarda DATOS en el estado, no frases ya traducidas; traduce al pintar (si no, al cambiar de idioma quedan frases viejas).
+     · Cada pantalla se repinta al cambiar de idioma (evento «langchange» → RENDER[step]).
+     · A la IA se le pide el idioma con INSTR_IDIOMA(); las citas literales del material se copian en su idioma original. */
+const LANGS = {es: 'Español', ca: 'Català', eu: 'Euskara', gl: 'Galego', en: 'English', pt: 'Português'};   // ca, eu y gl: opcionales (lenguas cooficiales de España)
+const IA_LANG = {es: 'español', ca: 'català', eu: 'euskara (vasco)', gl: 'galego (gallego)', en: 'English', pt: 'português'};   // cómo se le nombra el idioma a la IA
+const LOCALE = {es: 'es-ES', ca: 'ca-ES', eu: 'eu-ES', gl: 'gl-ES', en: 'en-GB', pt: 'pt-PT'};            // formatos de número y fecha
+const langsOn = () => (typeof LANGS_ON !== 'undefined' ? LANGS_ON : ['es', 'en', 'pt']).filter(l => LANGS[l]);
+let LANG = 'es', _D = null;
+const locale = () => LOCALE[LANG] || 'es-ES';
+const langIA = () => IA_LANG[LANG] || 'español';
+/* frase para añadir a CADA prompt cuya respuesta ve la persona: la IA escribe en su idioma, pero ids, claves JSON y citas literales no se tocan */
+const INSTR_IDIOMA = () => `Escribe todos los textos de tu respuesta (los valores de los campos JSON) en ${langIA()}. No traduzcas los nombres de las claves JSON, los identificadores ni las citas literales del material: cópialas en su idioma original, sin cambiar nada.`;
+
+const I18N_BASE = {
+  en: {
+    'Inicio': 'Home', 'Ayuda': 'Help', 'IA': 'AI', 'Pasos': 'Steps', 'Atrás': 'Back', 'Siguiente': 'Next', 'Cerrar': 'Close', 'Cancelar': 'Cancel', 'Idioma': 'Language',
+    'Volver al inicio': 'Back to the start', 'Inteligencia artificial': 'Artificial intelligence', 'Proveedor': 'Provider', 'Tu clave de API': 'Your API key', 'Ver': 'Show', 'Modelo': 'Model',
+    'Ver los modelos de mi clave': 'Show the models available for my key',
+    'f.ia.ayuda': 'The key is stored only in this browser and sent only to your provider. Each person uses their own key and pays for their own use. Choose an inexpensive model: this use does not need the most powerful one.',
+    'Esto es lo que saldría hacia tu proveedor de IA': 'This is what would be sent to your AI provider',
+    'f.envio.chk': 'I have reviewed the sample and confirm that it may leave my computer.',
+    'Muestra del envío:': 'Sample of what is sent:', 'Realizada entre': 'Created by', 'Realizada por': 'Created by',
+    'Cómo funciona': 'How it works', 'Dónde va cada cosa': 'Where everything goes',
+    'Siempre en tu ordenador': 'Always on your computer', 'Sale hacia tu proveedor de IA': 'Sent to your AI provider',
+    'No se pudo cargar la librería {0}. Puede que un bloqueador o la red de tu institución la impida; prueba otra red o desactiva el bloqueador en esta página.': "Could not load the {0} library. A content blocker or your institution's network may be preventing it; try another network or disable the blocker on this page.",
+    'Sin conexión: hace falta internet para abrir este tipo de fichero la primera vez.': "Offline: an internet connection is needed to open this type of file the first time.",
+    'No se pudo guardar en el navegador (¿demasiado material?)': 'Could not save in the browser (too much material?)', 'No se pudo guardar en el navegador': 'Could not save in the browser',
+    '{0} no reconoce tu clave. Revísala en el botón «IA».': '{0} does not recognise your key. Check it with the “AI” button.',
+    'Tu clave no tiene acceso al modelo «{0}». Elige otro en el botón «IA».': 'Your key has no access to the model “{0}”. Choose another one with the “AI” button.',
+    'Tu cuenta de {0} no tiene saldo o ha alcanzado su límite.': 'Your {0} account has no balance or has reached its limit.',
+    'El modelo «{0}» no admite imágenes. Elige uno con visión.': 'The model “{0}” does not accept images. Choose one with vision.',
+    'No hay conexión con {0}.': 'No connection to {0}.', '{0} no responde ahora mismo. Inténtalo de nuevo en un momento.': '{0} is not responding right now. Please try again in a moment.',
+    'Falta tu clave de IA. Pulsa el botón «IA», arriba.': 'Your AI key is missing. Press the “AI” button at the top.', 'OpenAI no responde ahora mismo.': 'OpenAI is not responding right now.',
+    'El proveedor ha bloqueado la respuesta ({0}).': 'The provider blocked the response ({0}).',
+    'La IA no devolvió una respuesta con el formato esperado. Inténtalo de nuevo.': 'The AI did not return a response in the expected format. Please try again.',
+    'Primero pega tu clave.': 'Paste your key first.', '{0} modelos disponibles en tu clave; escribe o elige uno.': '{0} models available for your key; type or choose one.',
+    'Pega tu clave de IA para continuar': 'Paste your AI key to continue',
+    'El PowerPoint no tiene diapositivas': 'The PowerPoint has no slides', 'Formato no admitido (usa Word, PDF, PowerPoint, texto, imágenes, audio o vídeo)': 'Unsupported format (use Word, PDF, PowerPoint, text, images, audio or video)',
+    '«{0}» pesa más de 600 MB: exporta solo el audio (MP3 o WAV) y súbelo en su lugar.': '“{0}” is larger than 600 MB: export only the audio (MP3 or WAV) and upload that instead.',
+    'No se pudo leer el audio de «{0}». Prueba a exportarlo como MP3 o WAV.': 'Could not read the audio of “{0}”. Try exporting it as MP3 or WAV.',
+    'Para transcribir necesitas una clave de OpenAI o de Gemini (Claude no transcribe audio). Añádela en el botón «IA».': 'To transcribe you need an OpenAI or Gemini key (Claude does not transcribe audio). Add it with the “AI” button.',
+    'actual': "current",
+    'no aparece en tu clave': "not available for your key",
+    'Otro modelo (escribirlo)…': "Another model (type it)…",
+    'Escribe el nombre exacto del modelo': "Type the exact model name",
+    'Cargando los modelos de tu clave…': "Loading the models for your key…",
+    '{0} modelos disponibles en tu clave: elígelo en el desplegable.': "{0} models available for your key: choose one from the drop-down list.",
+    'Tu clave no devolvió ningún modelo de texto. Escribe el nombre con «Otro modelo».': "Your key returned no text models. Type the name with “Another model”."
+  },
+  pt: {
+    'Inicio': 'Início', 'Ayuda': 'Ajuda', 'IA': 'IA', 'Pasos': 'Passos', 'Atrás': 'Voltar', 'Siguiente': 'Seguinte', 'Cerrar': 'Fechar', 'Cancelar': 'Cancelar', 'Idioma': 'Idioma',
+    'Volver al inicio': 'Voltar ao início', 'Inteligencia artificial': 'Inteligência artificial', 'Proveedor': 'Fornecedor', 'Tu clave de API': 'A sua chave de API', 'Ver': 'Mostrar', 'Modelo': 'Modelo',
+    'Ver los modelos de mi clave': 'Ver os modelos disponíveis na minha chave',
+    'f.ia.ayuda': 'A chave é guardada apenas neste navegador e enviada apenas ao seu fornecedor. Cada pessoa usa a sua própria chave e paga a sua utilização. Escolha um modelo económico: esta utilização não precisa do mais potente.',
+    'Esto es lo que saldría hacia tu proveedor de IA': 'Isto é o que seria enviado ao seu fornecedor de IA',
+    'f.envio.chk': 'Revi a amostra e confirmo que pode sair do meu computador.',
+    'Muestra del envío:': 'Amostra do que é enviado:', 'Realizada entre': 'Realizada por', 'Realizada por': 'Realizada por',
+    'Cómo funciona': 'Como funciona', 'Dónde va cada cosa': 'Para onde vai cada coisa',
+    'Siempre en tu ordenador': 'Sempre no seu computador', 'Sale hacia tu proveedor de IA': 'Enviado ao seu fornecedor de IA',
+    'No se pudo cargar la librería {0}. Puede que un bloqueador o la red de tu institución la impida; prueba otra red o desactiva el bloqueador en esta página.': "Não foi possível carregar a biblioteca {0}. Um bloqueador ou a rede da sua instituição pode estar a impedi-la; experimente outra rede ou desative o bloqueador nesta página.",
+    'Sin conexión: hace falta internet para abrir este tipo de fichero la primera vez.': "Sem ligação: é preciso internet para abrir este tipo de ficheiro pela primeira vez.",
+    'No se pudo guardar en el navegador (¿demasiado material?)': 'Não foi possível guardar no navegador (demasiado material?)', 'No se pudo guardar en el navegador': 'Não foi possível guardar no navegador',
+    '{0} no reconoce tu clave. Revísala en el botón «IA».': '{0} não reconhece a sua chave. Verifique-a no botão «IA».',
+    'Tu clave no tiene acceso al modelo «{0}». Elige otro en el botón «IA».': 'A sua chave não tem acesso ao modelo «{0}». Escolha outro no botão «IA».',
+    'Tu cuenta de {0} no tiene saldo o ha alcanzado su límite.': 'A sua conta {0} não tem saldo ou atingiu o limite.',
+    'El modelo «{0}» no admite imágenes. Elige uno con visión.': 'O modelo «{0}» não aceita imagens. Escolha um com visão.',
+    'No hay conexión con {0}.': 'Sem ligação a {0}.', '{0} no responde ahora mismo. Inténtalo de nuevo en un momento.': '{0} não está a responder neste momento. Tente novamente daqui a pouco.',
+    'Falta tu clave de IA. Pulsa el botón «IA», arriba.': 'Falta a sua chave de IA. Prima o botão «IA», em cima.', 'OpenAI no responde ahora mismo.': 'A OpenAI não está a responder neste momento.',
+    'El proveedor ha bloqueado la respuesta ({0}).': 'O fornecedor bloqueou a resposta ({0}).',
+    'La IA no devolvió una respuesta con el formato esperado. Inténtalo de nuevo.': 'A IA não devolveu uma resposta no formato esperado. Tente novamente.',
+    'Primero pega tu clave.': 'Cole primeiro a sua chave.', '{0} modelos disponibles en tu clave; escribe o elige uno.': '{0} modelos disponíveis na sua chave; escreva ou escolha um.',
+    'Pega tu clave de IA para continuar': 'Cole a sua chave de IA para continuar',
+    'El PowerPoint no tiene diapositivas': 'O PowerPoint não tem diapositivos', 'Formato no admitido (usa Word, PDF, PowerPoint, texto, imágenes, audio o vídeo)': 'Formato não suportado (use Word, PDF, PowerPoint, texto, imagens, áudio ou vídeo)',
+    '«{0}» pesa más de 600 MB: exporta solo el audio (MP3 o WAV) y súbelo en su lugar.': '«{0}» tem mais de 600 MB: exporte apenas o áudio (MP3 ou WAV) e carregue-o em vez disso.',
+    'No se pudo leer el audio de «{0}». Prueba a exportarlo como MP3 o WAV.': 'Não foi possível ler o áudio de «{0}». Tente exportá-lo como MP3 ou WAV.',
+    'Para transcribir necesitas una clave de OpenAI o de Gemini (Claude no transcribe audio). Añádela en el botón «IA».': 'Para transcrever precisa de uma chave da OpenAI ou do Gemini (o Claude não transcreve áudio). Adicione-a no botão «IA».',
+    'actual': "atual",
+    'no aparece en tu clave': "não aparece na sua chave",
+    'Otro modelo (escribirlo)…': "Outro modelo (escrevê-lo)…",
+    'Escribe el nombre exacto del modelo': "Escreva o nome exato do modelo",
+    'Cargando los modelos de tu clave…': "A carregar os modelos da sua chave…",
+    '{0} modelos disponibles en tu clave: elígelo en el desplegable.': "{0} modelos disponíveis na sua chave: escolha-o na lista pendente.",
+    'Tu clave no devolvió ningún modelo de texto. Escribe el nombre con «Otro modelo».': "A sua chave não devolveu nenhum modelo de texto. Escreva o nome com «Outro modelo»."
+  },
+  ca: {
+    'Inicio': "Inici",
+    'Ayuda': "Ajuda",
+    'IA': "IA",
+    'Pasos': "Passos",
+    'Atrás': "Enrere",
+    'Siguiente': "Següent",
+    'Cerrar': "Tancar",
+    'Cancelar': "Cancel·lar",
+    'Idioma': "Idioma",
+    'Volver al inicio': "Tornar a l’inici",
+    'Inteligencia artificial': "Intel·ligència artificial",
+    'Proveedor': "Proveïdor",
+    'Tu clave de API': "La teva clau d’API",
+    'Ver': "Veure",
+    'Modelo': "Model",
+    'Ver los modelos de mi clave': "Veure els models de la meva clau",
+    'f.ia.ayuda': "La clau es desa només en aquest navegador i s’envia únicament al teu proveïdor. Cada persona fa servir la seva i paga el seu ús. Tria un model econòmic: aquest ús no necessita el més potent.",
+    'Esto es lo que saldría hacia tu proveedor de IA': "Això és el que sortiria cap al teu proveïdor d’IA",
+    'f.envio.chk': "He revisat la mostra i confirmo que pot sortir del meu ordinador.",
+    'Muestra del envío:': "Mostra de l’enviament:",
+    'Realizada entre': "Realitzada per",
+    'Realizada por': "Realitzada per",
+    'Cómo funciona': "Com funciona",
+    'Dónde va cada cosa': "On va cada cosa",
+    'Siempre en tu ordenador': "Sempre al teu ordinador",
+    'Sale hacia tu proveedor de IA': "Surt cap al teu proveïdor d’IA",
+    'No se pudo cargar la librería {0}. Puede que un bloqueador o la red de tu institución la impida; prueba otra red o desactiva el bloqueador en esta página.': "No s’ha pogut carregar la biblioteca {0}. Potser un bloquejador o la xarxa de la teua institució ho impedeix; prova una altra xarxa o desactiva el bloquejador en aquesta pàgina.",
+    'Sin conexión: hace falta internet para abrir este tipo de fichero la primera vez.': "Sense connexió: cal internet per a obrir aquest tipus de fitxer la primera vegada.",
+    'No se pudo guardar en el navegador (¿demasiado material?)': "No s’ha pogut desar al navegador (massa material?)",
+    'No se pudo guardar en el navegador': "No s’ha pogut desar al navegador",
+    '{0} no reconoce tu clave. Revísala en el botón «IA».': "{0} no reconeix la teva clau. Revisa-la al botó «IA».",
+    'Tu clave no tiene acceso al modelo «{0}». Elige otro en el botón «IA».': "La teva clau no té accés al model «{0}». Tria’n un altre al botó «IA».",
+    'Tu cuenta de {0} no tiene saldo o ha alcanzado su límite.': "El teu compte de {0} no té saldo o ha arribat al límit.",
+    'El modelo «{0}» no admite imágenes. Elige uno con visión.': "El model «{0}» no admet imatges. Tria’n un amb visió.",
+    'No hay conexión con {0}.': "No hi ha connexió amb {0}.",
+    '{0} no responde ahora mismo. Inténtalo de nuevo en un momento.': "{0} no respon ara mateix. Torna-ho a provar d’aquí a un moment.",
+    'Falta tu clave de IA. Pulsa el botón «IA», arriba.': "Falta la teva clau d’IA. Prem el botó «IA», a dalt.",
+    'OpenAI no responde ahora mismo.': "OpenAI no respon ara mateix.",
+    'El proveedor ha bloqueado la respuesta ({0}).': "El proveïdor ha bloquejat la resposta ({0}).",
+    'La IA no devolvió una respuesta con el formato esperado. Inténtalo de nuevo.': "La IA no ha retornat una resposta amb el format esperat. Torna-ho a provar.",
+    'Primero pega tu clave.': "Primer enganxa la teva clau.",
+    '{0} modelos disponibles en tu clave; escribe o elige uno.': "{0} models disponibles amb la teva clau; escriu-ne o tria’n un.",
+    'Pega tu clave de IA para continuar': "Enganxa la teva clau d’IA per continuar",
+    'El PowerPoint no tiene diapositivas': "El PowerPoint no té diapositives",
+    'Formato no admitido (usa Word, PDF, PowerPoint, texto, imágenes, audio o vídeo)': "Format no admès (fes servir Word, PDF, PowerPoint, text, imatges, àudio o vídeo)",
+    '«{0}» pesa más de 600 MB: exporta solo el audio (MP3 o WAV) y súbelo en su lugar.': "«{0}» pesa més de 600 MB: exporta només l’àudio (MP3 o WAV) i puja’l en lloc seu.",
+    'No se pudo leer el audio de «{0}». Prueba a exportarlo como MP3 o WAV.': "No s’ha pogut llegir l’àudio de «{0}». Prova d’exportar-lo com a MP3 o WAV.",
+    'Para transcribir necesitas una clave de OpenAI o de Gemini (Claude no transcribe audio). Añádela en el botón «IA».': "Per transcriure necessites una clau d’OpenAI o de Gemini (Claude no transcriu àudio). Afegeix-la al botó «IA».",
+    'actual': "actual",
+    'no aparece en tu clave': "no apareix a la teva clau",
+    'Otro modelo (escribirlo)…': "Un altre model (escriure’l)…",
+    'Escribe el nombre exacto del modelo': "Escriu el nom exacte del model",
+    'Cargando los modelos de tu clave…': "Carregant els models de la teva clau…",
+    '{0} modelos disponibles en tu clave: elígelo en el desplegable.': "{0} models disponibles amb la teva clau: tria’l al desplegable.",
+    'Tu clave no devolvió ningún modelo de texto. Escribe el nombre con «Otro modelo».': "La teva clau no ha retornat cap model de text. Escriu el nom amb «Un altre model»."
+  },
+  eu: {
+    'Inicio': "Hasiera",
+    'Ayuda': "Laguntza",
+    'IA': "AA",
+    'Pasos': "Urratsak",
+    'Atrás': "Atzera",
+    'Siguiente': "Hurrengoa",
+    'Cerrar': "Itxi",
+    'Cancelar': "Utzi",
+    'Idioma': "Hizkuntza",
+    'Volver al inicio': "Hasierara itzuli",
+    'Inteligencia artificial': "Adimen artifiziala",
+    'Proveedor': "Hornitzailea",
+    'Tu clave de API': "Zure API gakoa",
+    'Ver': "Ikusi",
+    'Modelo': "Eredua",
+    'Ver los modelos de mi clave': "Nire gakoaren ereduak ikusi",
+    'f.ia.ayuda': "Gakoa nabigatzaile honetan bakarrik gordetzen da eta zure hornitzaileari bakarrik bidaltzen zaio. Pertsona bakoitzak berea erabiltzen du eta bere erabilera ordaintzen du. Aukeratu eredu merke bat: erabilera honek ez du ahaltsuena behar.",
+    'Esto es lo que saldría hacia tu proveedor de IA': "Hau bidaliko litzateke zure AA hornitzailera",
+    'f.envio.chk': "Lagina berrikusi dut eta baieztatzen dut nire ordenagailutik atera daitekeela.",
+    'Muestra del envío:': "Bidalketaren lagina:",
+    'Realizada entre': "Egileak",
+    'Realizada por': "Egilea",
+    'Cómo funciona': "Nola dabilen",
+    'Dónde va cada cosa': "Non dagoen bakoitza",
+    'Siempre en tu ordenador': "Beti zure ordenagailuan",
+    'Sale hacia tu proveedor de IA': "Zure AA hornitzailera bidaltzen da",
+    'No se pudo cargar la librería {0}. Puede que un bloqueador o la red de tu institución la impida; prueba otra red o desactiva el bloqueador en esta página.': "Ezin izan da {0} liburutegia kargatu. Agian blokeatzaile batek edo zure erakundearen sareak eragozten du; probatu beste sare bat edo desaktibatu blokeatzailea orri honetan.",
+    'Sin conexión: hace falta internet para abrir este tipo de fichero la primera vez.': "Konexiorik gabe: internet behar da fitxategi mota hau lehen aldiz irekitzeko.",
+    'No se pudo guardar en el navegador (¿demasiado material?)': "Ezin izan da nabigatzailean gorde (material gehiegi?)",
+    'No se pudo guardar en el navegador': "Ezin izan da nabigatzailean gorde",
+    '{0} no reconoce tu clave. Revísala en el botón «IA».': "{0}k ez du zure gakoa ezagutzen. Egiaztatu «AA» botoian.",
+    'Tu clave no tiene acceso al modelo «{0}». Elige otro en el botón «IA».': "Zure gakoak ez du «{0}» eredurako sarbiderik. Aukeratu beste bat «AA» botoian.",
+    'Tu cuenta de {0} no tiene saldo o ha alcanzado su límite.': "Zure {0} kontuak ez du saldorik edo mugara iritsi da.",
+    'El modelo «{0}» no admite imágenes. Elige uno con visión.': "«{0}» ereduak ez du irudirik onartzen. Aukeratu ikusmena duen bat.",
+    'No hay conexión con {0}.': "Ez dago konexiorik {0}-rekin.",
+    '{0} no responde ahora mismo. Inténtalo de nuevo en un momento.': "{0}k ez du erantzuten oraintxe. Saiatu berriro geroxeago.",
+    'Falta tu clave de IA. Pulsa el botón «IA», arriba.': "Zure AA gakoa falta da. Sakatu goiko «AA» botoia.",
+    'OpenAI no responde ahora mismo.': "OpenAIk ez du erantzuten oraintxe.",
+    'El proveedor ha bloqueado la respuesta ({0}).': "Hornitzaileak erantzuna blokeatu du ({0}).",
+    'La IA no devolvió una respuesta con el formato esperado. Inténtalo de nuevo.': "AAk ez du espero zen formatuko erantzunik itzuli. Saiatu berriro.",
+    'Primero pega tu clave.': "Lehenik itsatsi zure gakoa.",
+    '{0} modelos disponibles en tu clave; escribe o elige uno.': "{0} eredu daude erabilgarri zure gakoarekin; idatzi edo aukeratu bat.",
+    'Pega tu clave de IA para continuar': "Itsatsi zure AA gakoa jarraitzeko",
+    'El PowerPoint no tiene diapositivas': "PowerPointak ez du diapositibarik",
+    'Formato no admitido (usa Word, PDF, PowerPoint, texto, imágenes, audio o vídeo)': "Formatu onartezina (erabili Word, PDF, PowerPoint, testua, irudiak, audioa edo bideoa)",
+    '«{0}» pesa más de 600 MB: exporta solo el audio (MP3 o WAV) y súbelo en su lugar.': "«{0}»k 600 MB baino gehiago ditu: esportatu audioa bakarrik (MP3 edo WAV) eta igo hori.",
+    'No se pudo leer el audio de «{0}». Prueba a exportarlo como MP3 o WAV.': "Ezin izan da «{0}»ren audioa irakurri. Saiatu MP3 edo WAV gisa esportatzen.",
+    'Para transcribir necesitas una clave de OpenAI o de Gemini (Claude no transcribe audio). Añádela en el botón «IA».': "Transkribatzeko OpenAI edo Gemini gako bat behar duzu (Claudek ez du audiorik transkribatzen). Gehitu «AA» botoian.",
+    'actual': "oraingoa",
+    'no aparece en tu clave': "ez dago zure gakoan",
+    'Otro modelo (escribirlo)…': "Beste eredu bat (idatzi)…",
+    'Escribe el nombre exacto del modelo': "Idatzi ereduaren izen zehatza",
+    'Cargando los modelos de tu clave…': "Zure gakoaren ereduak kargatzen…",
+    '{0} modelos disponibles en tu clave: elígelo en el desplegable.': "{0} eredu daude zure gakoarekin: aukeratu zabaltzen den zerrendan.",
+    'Tu clave no devolvió ningún modelo de texto. Escribe el nombre con «Otro modelo».': "Zure gakoak ez du testu-eredurik itzuli. Idatzi izena «Beste eredu bat» aukerarekin."
+  },
+  gl: {
+    'Inicio': "Inicio",
+    'Ayuda': "Axuda",
+    'IA': "IA",
+    'Pasos': "Pasos",
+    'Atrás': "Atrás",
+    'Siguiente': "Seguinte",
+    'Cerrar': "Pechar",
+    'Cancelar': "Cancelar",
+    'Idioma': "Idioma",
+    'Volver al inicio': "Volver ao inicio",
+    'Inteligencia artificial': "Intelixencia artificial",
+    'Proveedor': "Provedor",
+    'Tu clave de API': "A túa clave de API",
+    'Ver': "Ver",
+    'Modelo': "Modelo",
+    'Ver los modelos de mi clave': "Ver os modelos da miña clave",
+    'f.ia.ayuda': "A clave gárdase só neste navegador e envíase unicamente ao teu provedor. Cada persoa usa a súa e paga o seu uso. Escolle un modelo económico: este uso non precisa o máis potente.",
+    'Esto es lo que saldría hacia tu proveedor de IA': "Isto é o que sairía cara ao teu provedor de IA",
+    'f.envio.chk': "Revisei a mostra e confirmo que pode saír do meu ordenador.",
+    'Muestra del envío:': "Mostra do envío:",
+    'Realizada entre': "Realizada por",
+    'Realizada por': "Realizada por",
+    'Cómo funciona': "Como funciona",
+    'Dónde va cada cosa': "Onde vai cada cousa",
+    'Siempre en tu ordenador': "Sempre no teu ordenador",
+    'Sale hacia tu proveedor de IA': "Sae cara ao teu provedor de IA",
+    'No se pudo cargar la librería {0}. Puede que un bloqueador o la red de tu institución la impida; prueba otra red o desactiva el bloqueador en esta página.': "Non se puido cargar a biblioteca {0}. Quizais un bloqueador ou a rede da túa institución o impida; proba outra rede ou desactiva o bloqueador nesta páxina.",
+    'Sin conexión: hace falta internet para abrir este tipo de fichero la primera vez.': "Sen conexión: cómpre internet para abrir este tipo de ficheiro a primeira vez.",
+    'No se pudo guardar en el navegador (¿demasiado material?)': "Non se puido gardar no navegador (demasiado material?)",
+    'No se pudo guardar en el navegador': "Non se puido gardar no navegador",
+    '{0} no reconoce tu clave. Revísala en el botón «IA».': "{0} non recoñece a túa clave. Revísaa no botón «IA».",
+    'Tu clave no tiene acceso al modelo «{0}». Elige otro en el botón «IA».': "A túa clave non ten acceso ao modelo «{0}». Escolle outro no botón «IA».",
+    'Tu cuenta de {0} no tiene saldo o ha alcanzado su límite.': "A túa conta de {0} non ten saldo ou alcanzou o seu límite.",
+    'El modelo «{0}» no admite imágenes. Elige uno con visión.': "O modelo «{0}» non admite imaxes. Escolle un con visión.",
+    'No hay conexión con {0}.': "Non hai conexión con {0}.",
+    '{0} no responde ahora mismo. Inténtalo de nuevo en un momento.': "{0} non responde agora mesmo. Ténteo de novo nun momento.",
+    'Falta tu clave de IA. Pulsa el botón «IA», arriba.': "Falta a túa clave de IA. Preme o botón «IA», arriba.",
+    'OpenAI no responde ahora mismo.': "OpenAI non responde agora mesmo.",
+    'El proveedor ha bloqueado la respuesta ({0}).': "O provedor bloqueou a resposta ({0}).",
+    'La IA no devolvió una respuesta con el formato esperado. Inténtalo de nuevo.': "A IA non devolveu unha resposta co formato esperado. Ténteo de novo.",
+    'Primero pega tu clave.': "Primeiro pega a túa clave.",
+    '{0} modelos disponibles en tu clave; escribe o elige uno.': "{0} modelos dispoñibles na túa clave; escribe ou escolle un.",
+    'Pega tu clave de IA para continuar': "Pega a túa clave de IA para continuar",
+    'El PowerPoint no tiene diapositivas': "O PowerPoint non ten diapositivas",
+    'Formato no admitido (usa Word, PDF, PowerPoint, texto, imágenes, audio o vídeo)': "Formato non admitido (usa Word, PDF, PowerPoint, texto, imaxes, audio ou vídeo)",
+    '«{0}» pesa más de 600 MB: exporta solo el audio (MP3 o WAV) y súbelo en su lugar.': "«{0}» pesa máis de 600 MB: exporta só o audio (MP3 ou WAV) e súbeo no seu lugar.",
+    'No se pudo leer el audio de «{0}». Prueba a exportarlo como MP3 o WAV.': "Non se puido ler o audio de «{0}». Proba a exportalo como MP3 ou WAV.",
+    'Para transcribir necesitas una clave de OpenAI o de Gemini (Claude no transcribe audio). Añádela en el botón «IA».': "Para transcribir precisas unha clave de OpenAI ou de Gemini (Claude non transcribe audio). Engádea no botón «IA».",
+    'actual': "actual",
+    'no aparece en tu clave': "non aparece na túa clave",
+    'Otro modelo (escribirlo)…': "Outro modelo (escribilo)…",
+    'Escribe el nombre exacto del modelo': "Escribe o nome exacto do modelo",
+    'Cargando los modelos de tu clave…': "Cargando os modelos da túa clave…",
+    '{0} modelos disponibles en tu clave: elígelo en el desplegable.': "{0} modelos dispoñibles na túa clave: escólleo no despregable.",
+    'Tu clave no devolvió ningún modelo de texto. Escribe el nombre con «Otro modelo».': "A túa clave non devolveu ningún modelo de texto. Escribe o nome con «Outro modelo»."
+  }
+};
+
+const _dict = l => ({...(I18N_BASE[l] || {}), ...((typeof I18N !== 'undefined' && I18N && I18N[l]) || {})});
+const D = () => _D || (_D = _dict(LANG));
+/* t(clave, ...args): traduce y rellena {0}, {1}…  Si falta la traducción devuelve el español (la clave o I18N.es[clave]): nunca texto vacío. */
+function t(k, ...a) {
+  let s = D()[k];
+  if (s === undefined && typeof I18N !== 'undefined' && I18N && I18N.es) s = I18N.es[k];
+  if (s === undefined) s = k;
+  return a.length ? String(s).replace(/\{(\d+)\}/g, (m, i) => a[+i] ?? m) : String(s);
+}
+function applyI18n(root = document) {
+  document.documentElement.lang = LANG;
+  root.querySelectorAll('[data-i18n]').forEach(el => {
+    if (el._es === undefined) el._es = el.innerHTML;                       // el español original, tal como está en el HTML
+    const v = LANG === 'es' ? undefined : D()[el.dataset.i18n];
+    el.innerHTML = v !== undefined ? v : el._es;
+  });
+  root.querySelectorAll('[data-i18n-attr]').forEach(el => {
+    el._esA = el._esA || {};
+    el.dataset.i18nAttr.split(';').forEach(par => {
+      const [at, k] = par.split(':').map(x => x.trim()); if (!at || !k) return;
+      if (!(at in el._esA)) el._esA[at] = el.getAttribute(at) ?? '';
+      const v = LANG === 'es' ? undefined : D()[k]; el.setAttribute(at, v !== undefined ? v : el._esA[at]);
+    });
+  });
+  if (applyI18n._tit === undefined) applyI18n._tit = document.title;
+  const tit = LANG === 'es' ? undefined : D()['title']; document.title = tit !== undefined ? tit : applyI18n._tit;
+}
+function setLang(l) {
+  if (!langsOn().includes(l)) l = langsOn()[0];
+  LANG = l; _D = null; try { localStorage.setItem(APP + '_lang', l); } catch {}
+  applyI18n(); const s = $('selLang'); if (s) s.value = l;
+  window.dispatchEvent(new CustomEvent('langchange', {detail: l}));
+}
+/* llamada UNA vez desde iniciaUI(). Orden de preferencia: ?lang=xx en la URL (para compartir enlaces) → elección guardada → español. */
+function initI18n() {
+  let l = 'es'; try { l = localStorage.getItem(APP + '_lang') || 'es'; } catch {}
+  const q = new URLSearchParams(location.search).get('lang'); if (q) l = q;
+  LANG = langsOn().includes(l) ? l : 'es'; _D = null;
+  const sel = $('selLang');
+  if (sel) { sel.innerHTML = langsOn().map(x => `<option value="${x}">${LANGS[x]}</option>`).join(''); sel.value = LANG; sel.onchange = () => setLang(sel.value); }
+  if (langsOn().length < 2 && $('langBox')) $('langBox').remove();
+  applyI18n();
+}
+/* Para las pruebas: claves del HTML, pasos, botones y glosario que no tienen traducción en algún idioma activo ([] = completo). */
+function i18nFaltan() {
+  const keys = new Set(), lit = [];
+  document.querySelectorAll('[data-i18n]').forEach(el => keys.add(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-attr]').forEach(el => el.dataset.i18nAttr.split(';').forEach(p => { const k = (p.split(':')[1] || '').trim(); if (k) keys.add(k); }));
+  if (typeof STEPS !== 'undefined') lit.push(...STEPS);
+  if (typeof NAV !== 'undefined') NAV.forEach(n => lit.push(n[0], n[1]));
+  if (typeof GLOS !== 'undefined') GLOS.forEach(g => lit.push(g[0], g[1]));
+  if (typeof HUBS !== 'undefined') lit.push(...HUBS);
+  const out = [];
+  langsOn().filter(l => l !== 'es').forEach(l => { const d = _dict(l); [...keys, ...lit.filter(Boolean)].forEach(k => { if (d[k] === undefined) out.push(l + ': ' + String(k).slice(0, 60)); }); });
+  return out;
+}
+
+/* ── salidas: Word, ZIP y CSV SIN LIBRERÍAS EXTERNAS ─────────────────────────────────────────────────────────
+   Antes se cargaban docx y JSZip desde cdnjs al pulsar «Descargar»: si la URL de cdnjs cambiaba, si había un
+   bloqueador, un proxy de la universidad o no había red, salía «No se pudo cargar una librería: ¿hay conexión?».
+   Ahora el .docx y el .zip se escriben aquí mismo (Office Open XML + ZIP), funcionan sin conexión, con file:// y
+   con cualquier CSP. No toques esto para volver a usar window.docx: si una app necesita algo que wordDeMarkdown
+   no hace, amplía este escritor (párrafos, tablas, estilos), no añadas una dependencia de red. */
+
+/* ZIP: crc32 + cabeceras locales y directorio central. Comprime con deflate-raw si el navegador lo permite
+   (CompressionStream); si no, guarda sin comprimir (método 0), que Word y cualquier descompresor leen igual. */
+const _CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = _CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+async function _bytes(c) {
+  if (c instanceof Uint8Array) return c;
+  if (c instanceof ArrayBuffer) return new Uint8Array(c);
+  if (ArrayBuffer.isView(c)) return new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
+  if (c instanceof Blob) return new Uint8Array(await c.arrayBuffer());
+  return new TextEncoder().encode(String(c ?? ''));
+}
+async function _deflate(b) {
+  if (typeof CompressionStream !== 'function' || b.length < 200) return null;
+  try { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); } catch { return null; }
+}
+async function zipBytes(ficheros, {comprimir = true} = {}) {
+  const d = new Date(), tm = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dt = ((Math.max(d.getFullYear(), 1980) - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const loc = [], cen = []; let off = 0;
+  for (const [nombre, cont] of Object.entries(ficheros)) {
+    const nm = new TextEncoder().encode(nombre), raw = await _bytes(cont), crc = crc32(raw);
+    const def = comprimir ? await _deflate(raw) : null, usa = def && def.length < raw.length, dat = usa ? def : raw, met = usa ? 8 : 0;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, met, true); h.setUint16(10, tm, true); h.setUint16(12, dt, true);
+    h.setUint32(14, crc, true); h.setUint32(18, dat.length, true); h.setUint32(22, raw.length, true); h.setUint16(26, nm.length, true); h.setUint16(28, 0, true);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, met, true); c.setUint16(12, tm, true); c.setUint16(14, dt, true);
+    c.setUint32(16, crc, true); c.setUint32(20, dat.length, true); c.setUint32(24, raw.length, true); c.setUint16(28, nm.length, true); c.setUint32(42, off, true);
+    loc.push(new Uint8Array(h.buffer), nm, dat); cen.push(new Uint8Array(c.buffer), nm);
+    off += 30 + nm.length + dat.length;
+  }
+  const tamCen = cen.reduce((s, x) => s + x.length, 0), n = Object.keys(ficheros).length, e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, n, true); e.setUint16(10, n, true); e.setUint32(12, tamCen, true); e.setUint32(16, off, true);
+  return new Blob([...loc, ...cen, new Uint8Array(e.buffer)]);
+}
+/* zipDe({'nombre.ext': Blob|string|Uint8Array|ArrayBuffer, …}) → Blob .zip  (misma firma que la versión con JSZip) */
+async function zipDe(ficheros) { const b = await zipBytes(ficheros); return new Blob([b], {type: 'application/zip'}); }
+
+/* Word (.docx) escrito a mano: Office Open XML mínimo, válido para Word, LibreOffice, Pages y Google Docs. */
+const _x = s => String(s ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+/* un «run» de texto: {text, b, i, col, s (medios puntos; null = el del estilo), font (null = el del estilo)} */
+function wRun({text = '', b, i, col, s = 22, font = 'Arial'} = {}) {
+  const pr = `<w:rPr>${font ? `<w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>` : ''}${b ? '<w:b/>' : ''}${i ? '<w:i/>' : ''}${col ? `<w:color w:val="${col}"/>` : ''}${s ? `<w:sz w:val="${s}"/><w:szCs w:val="${s}"/>` : ''}</w:rPr>`;   // s/font = null → los del estilo
+  return String(text).split('\n').map((l, k) => (k ? '<w:br/>' : '') + `<w:t xml:space="preserve">${_x(l)}</w:t>`).map(t => `<w:r>${pr}${t}</w:r>`).join('');
+}
+/* **negrita**, *cursiva* y `código` en línea → runs */
+function wInline(tx, base = {}) {   // base.b pone todo en negrita (cabeceras de tabla)
+  return String(tx).split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`)/).filter(Boolean).map(p =>
+    p.startsWith('**') ? wRun({...base, text: p.slice(2, -2), b: true}) :
+    p.startsWith('`') ? wRun({...base, text: p.slice(1, -1), font: 'Consolas'}) :
+    /^\*[^*\s]/.test(p) && p.endsWith('*') && p.length > 2 ? wRun({...base, text: p.slice(1, -1), i: true}) :
+    wRun({...base, text: p})).join('');
+}
+/* un párrafo: o = {h (1-3 → Título 1-3), c (centrado), after (twips), ind (sangría, twips), plain, s, b, i, col} */
+function wPara(tx, o = {}) {
+  const ppr = (o.h ? `<w:pStyle w:val="Heading${o.h}"/>` : '') + `<w:spacing w:after="${o.after ?? 110}"/>` + (o.ind ? `<w:ind w:left="${o.ind}" w:hanging="${o.hang ?? 0}"/>` : '') + (o.c ? '<w:jc w:val="center"/>' : '');
+  const s = o.h ? null : o.s;   // los títulos toman tamaño y color de su estilo (Heading1-3)
+  const runs = o.plain ? wRun({text: tx, s, b: o.b, i: o.i, col: o.col}) : wInline(tx, {s, i: o.i, col: o.col});
+  return `<w:p><w:pPr>${ppr}</w:pPr>${runs}</w:p>`;
+}
+/* tabla a partir de filas de celdas (la primera, cabecera en negrita) */
+function wTabla(filas) {
+  const nc = Math.max(...filas.map(f => f.length)), w = Math.floor(9000 / nc), bd = '<w:top w:val="single" w:sz="4" w:color="BFC9D4"/><w:left w:val="single" w:sz="4" w:color="BFC9D4"/><w:bottom w:val="single" w:sz="4" w:color="BFC9D4"/><w:right w:val="single" w:sz="4" w:color="BFC9D4"/><w:insideH w:val="single" w:sz="4" w:color="BFC9D4"/><w:insideV w:val="single" w:sz="4" w:color="BFC9D4"/>';
+  const fila = (f, cab) => '<w:tr>' + Array.from({length: nc}, (_, j) => `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${cab ? '<w:shd w:val="clear" w:color="auto" w:fill="EEF2F6"/>' : ''}</w:tcPr><w:p><w:pPr><w:spacing w:after="40"/></w:pPr>${wInline(f[j] ?? '', {s: 20, b: cab})}</w:p></w:tc>`).join('') + '</w:tr>';
+  return `<w:tbl><w:tblPr><w:tblW w:w="${w * nc}" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${'<w:gridCol w:w="' + w + '"/>'.repeat(nc)}</w:tblGrid>${filas.map((f, k) => fila(f, k === 0)).join('')}</w:tbl><w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>`;
+}
+/* wordDeXml(cuerpoXml, {creador, titulo}) → Blob .docx   (para apps que montan su propio cuerpo con wPara/wTabla) */
+async function wordDeXml(cuerpo, {creador = '', titulo = ''} = {}) {
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const hs = [[1, 32, '0F2237'], [2, 26, '0F2237'], [3, 23, '33475B']].map(([n, s, col]) => `<w:style w:type="paragraph" w:styleId="Heading${n}"><w:name w:val="heading ${n}"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:uiPriority w:val="9"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="${n === 1 ? 280 : 200}" w:after="100"/><w:outlineLvl w:val="${n - 1}"/></w:pPr><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:b/><w:color w:val="${col}"/><w:sz w:val="${s}"/><w:szCs w:val="${s}"/></w:rPr></w:style>`).join('');
+  const lang = typeof LANG === 'string' ? ({es: 'es-ES', ca: 'ca-ES', eu: 'eu-ES', gl: 'gl-ES', en: 'en-GB', pt: 'pt-PT'}[LANG] || 'es-ES') : 'es-ES';
+  const ahora = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  return new Blob([await zipBytes({
+    '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>',
+    '_rels/.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>',
+    'docProps/core.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${_x(titulo)}</dc:title><dc:creator>${_x(creador)}</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${ahora}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${ahora}</dcterms:modified></cp:coreProperties>`,
+    'word/_rels/document.xml.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+    'word/styles.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial" w:eastAsia="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="${lang}"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="110" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>${hs}</w:styles>`,
+    'word/document.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W}><w:body>${cuerpo}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1418" w:bottom="1418" w:left="1418" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`
+  })], {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+/* wordDeMarkdown(md, {titulo, subtitulo, pie, kicker}) → Blob .docx
+   Convierte #/##/### encabezados, listas, tablas Markdown (| a | b |), **negritas**, *cursivas* y `código`. */
+async function wordDeMarkdown(md, {titulo = '', subtitulo = '', pie = '', kicker = ''} = {}) {
+  const k = [];
+  if (kicker) k.push(wPara(String(kicker).toUpperCase(), {c: true, b: true, col: 'E4572E', s: 20, plain: true}));
+  if (titulo) k.push(wPara(titulo, {c: true, b: true, s: 32, plain: true}));
+  if (subtitulo) k.push(wPara(subtitulo, {c: true, col: '5D7691', s: 20, after: 260, plain: true}));
+  const lineas = String(md ?? '').replace(/\r\n?/g, '\n').split('\n'); let tabla = [];
+  const cierraTabla = () => { if (tabla.length) { k.push(wTabla(tabla)); tabla = []; } };
+  for (const l of lineas) {
+    const t = l.trimEnd(); let m;
+    if (/^\s*\|.*\|\s*$/.test(t)) { if (!/^\s*\|[\s:|-]+\|\s*$/.test(t)) tabla.push(t.trim().slice(1, -1).split('|').map(c => c.trim())); continue; }
+    cierraTabla(); if (!t.trim() || /^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(t)) continue;
+    if (m = t.match(/^(#{1,6})\s+(.*)/)) k.push(wPara(m[2], {h: Math.min(m[1].length, 3)}));
+    else if (m = t.match(/^(\s*)[-*•]\s+(.*)/)) k.push(wPara('•\t' + m[2], {ind: 360 + Math.min(m[1].length, 8) * 90, hang: 240, after: 60}));
+    else if (m = t.match(/^(\s*)(\d+[.)])\s+(.*)/)) k.push(wPara(m[2] + '\t' + m[3], {ind: 400 + Math.min(m[1].length, 8) * 90, hang: 320, after: 60}));
+    else if (m = t.match(/^>\s?(.*)/)) k.push(wPara(m[1], {ind: 360, i: true, col: '5D7691'}));
+    else k.push(wPara(t));
+  }
+  cierraTabla();
+  if (pie) k.push(wPara(pie, {i: true, s: 16, col: '8899AA', plain: true}));
+  const app = typeof APP_NAME === 'string' ? APP_NAME : (typeof APP === 'string' ? APP : '');
+  return wordDeXml(k.join(''), {creador: app, titulo: titulo || app});
+}
+/* csv con BOM, separador «;» (Excel en español) y comillas escapadas */
+const csvq = v => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const csvDe = (cab, filas) => '\ufeff' + [cab, ...filas].map(f => f.map(csvq).join(';')).join('\r\n');
+
+/* ══ Diccionarios de AnamnesIA para data-i18n y t() (navegación, ayuda y textos del HTML). El resto va en línea «es|en|pt». ══ */
+const I18N = {
+  en: {
+    'title': "AnamnesIA · Guided first visit in aesthetic medicine",
+    'hero.eyebrow': "EstéticIA Kit · Master's in Comprehensive Aesthetic and Anti-Ageing Medicine · Miguel Hernández University of Elche", 'hero.h1': "The first visit, <em>with nothing left out</em>", 'hero.lede': "Tick the techniques the patient is considering and the app asks only what matters for them. Each answer is checked against each technique's contraindications with fixed rules that explain why, and the summary for the clinical record is written for you. No AI and no connection needed.",
+    "s.empezar": "Start",
+    "s.ejemplo": "See an example",
+    "Resultado": "Result",
+    "s.j1b": "Patient and techniques",
+    "s.j1s": "You tick what is being considered and the reason for the visit.",
+    "s.j2b": "Only what matters",
+    "s.j2s": "The questions change with the techniques chosen.",
+    "s.j3b": "Expectations and screening",
+    "s.j3s": "Body dysmorphic disorder warning signs and what they expect.",
+    "s.j4b": "Traffic light and summary",
+    "s.j4s": "Each technique with its reasons and the text for the record.",
+    "s.zl": "<li>Answers, summaries and files, stored in this browser</li><li>The rules are applied right here: the app uses no AI and no connection</li><li>Use an identifier instead of the patient's name</li>",
+    "Paso 1 de 4": "Step 1 of 4",
+    "Paso 2 de 4": "Step 2 of 4",
+    "Paso 3 de 4": "Step 3 of 4",
+    "Paso 4 de 4": "Step 4 of 4",
+    "Paciente y técnicas": "Patient and techniques",
+    "s.pac.lede": "Identify the patient without their name, note the reason and tick the techniques being considered: the questions depend on them.",
+    "Antecedentes": "History",
+    "s.ant.lede": "Only the questions that matter for the techniques ticked, plus those that are always asked. Answer yes or no to each.",
+    "Expectativas y cribado": "Expectations and screening",
+    "s.exp.lede": "What the patient expects, whether it is realistic, and the warning signs of body dysmorphic disorder.",
+    "s.res.lede": "Each technique with its traffic light and the reasons. The summary for the clinical record is ready to download or copy.",
+    "f.pie": "Support tool for doctors: the rules summarise common contraindications and do not replace your product's information or clinical judgement. Your data are stored only in this browser.",
+    "Inicio": "Home",
+    "Paciente": "Patient",
+    "Expectativas": "Expectations",
+    "Empezar": "Start",
+    "Siguiente: antecedentes": "Next: history",
+    "Siguiente: expectativas": "Next: expectations",
+    "Siguiente: resultado": "Next: result",
+    "Volver al inicio": "Back to home",
+    "Prueba el ejemplo: una paciente que pide toxina y relleno.": "Try the example: a patient asking for toxin and filler.",
+    "Las técnicas marcadas deciden las preguntas.": "The techniques ticked decide the questions.",
+    "Responde sí o no; añade el detalle si hace falta.": "Answer yes or no; add detail if needed.",
+    "El cribado no diagnostica: orienta.": "Screening does not diagnose: it guides.",
+    "Descarga el resumen o pásalo a la siguiente app del kit.": "Download the summary or pass it to the next kit app.",
+    "¿Qué es AnamnesIA?": "What is AnamnesIA?",
+    "La segunda app del Kit EstéticIA: la primera visita guiada. Pregunta solo lo que importa para las técnicas que se plantean y cruza cada respuesta con sus contraindicaciones.": "The second app of the EstéticIA Kit: the guided first visit. It asks only what matters for the techniques being considered and checks each answer against their contraindications.",
+    "De dónde salen las reglas": "Where the rules come from",
+    "Resumen las contraindicaciones y precauciones habituales de las fichas técnicas y las instrucciones de uso. Cada producto tiene las suyas y manda la de tu producto. Rojo es no tratar ahora; ámbar es precaución.": "They summarise the usual contraindications and precautions in product information and instructions for use. Each product has its own, and yours prevails. Red means do not treat now; amber means caution.",
+    "El cribado de trastorno dismórfico corporal": "Body dysmorphic disorder screening",
+    "Las señales de alarma se basan en los criterios del DSM-5 y no son un cuestionario validado. Si usas uno validado (por ejemplo, el BDDQ-AS), anota su resultado. Un cribado positivo no es un diagnóstico: orienta a hablar con el paciente y a valorar la derivación.": "The warning signs are based on DSM-5 criteria and are not a validated questionnaire. If you use a validated one (for example, the BDDQ-AS), record its result. A positive screen is not a diagnosis: it guides you to talk with the patient and consider referral.",
+    "La ficha para el kit": "The kit file",
+    "Puedes descargar los datos en un fichero que leerán las siguientes apps del Kit EstéticIA, para no volver a preguntar lo mismo.": "You can download the data in a file that the next EstéticIA Kit apps will read, so you do not ask the same things again.",
+    "Sin IA y sin conexión": "No AI and no connection",
+    "La app no usa inteligencia artificial ni envía nada a ningún servidor. Las reglas se aplican en tu navegador.": "The app uses no artificial intelligence and sends nothing to any server. The rules are applied in your browser.",
+    "Privacidad": "Privacy",
+    "Todo se guarda en este navegador. Usa un identificador en lugar del nombre del paciente.": "Everything is stored in this browser. Use an identifier instead of the patient's name.",
+    "Límites": "Limits",
+    "Es una ayuda para médicos. No sustituye a la ficha técnica de tu producto, a la exploración ni al juicio clínico, y no recoge todas las contraindicaciones posibles.": "It is an aid for doctors. It does not replace your product's information, the examination or clinical judgement, and it does not cover every possible contraindication.",
+  },
+  pt: {
+    'title': "AnamnesIA · Primeira consulta guiada em medicina estética",
+    'hero.eyebrow': "Kit EstéticIA · Mestrado de Medicina Estética Integral e Antienvelhecimento · Universidade Miguel Hernández de Elche", 'hero.h1': "A primeira consulta, <em>sem esquecer nada</em>", 'hero.lede': "Marque as técnicas que o doente pondera e a app pergunta apenas o que importa para elas. Cada resposta é cruzada com as contraindicações de cada técnica, com regras fixas que explicam o porquê, e o resumo para o processo clínico fica pronto. Sem IA e sem ligação.",
+    "s.empezar": "Começar",
+    "s.ejemplo": "Ver um exemplo",
+    "Resultado": "Resultado",
+    "s.j1b": "Doente e técnicas",
+    "s.j1s": "Marca o que se pondera e o motivo da consulta.",
+    "s.j2b": "Só o que importa",
+    "s.j2s": "As perguntas mudam com as técnicas escolhidas.",
+    "s.j3b": "Expectativas e rastreio",
+    "s.j3s": "Sinais de alarme de perturbação dismórfica corporal e o que espera.",
+    "s.j4b": "Semáforo e resumo",
+    "s.j4s": "Cada técnica com o seu porquê e o texto para o processo.",
+    "s.zl": "<li>As respostas, os resumos e as fichas, guardados neste navegador</li><li>As regras aplicam-se aqui mesmo: a app não usa IA nem ligação</li><li>Use um identificador em vez do nome do doente</li>",
+    "Paso 1 de 4": "Passo 1 de 4",
+    "Paso 2 de 4": "Passo 2 de 4",
+    "Paso 3 de 4": "Passo 3 de 4",
+    "Paso 4 de 4": "Passo 4 de 4",
+    "Paciente y técnicas": "Doente e técnicas",
+    "s.pac.lede": "Identifique o doente sem o nome, anote o motivo e marque as técnicas ponderadas: as perguntas dependem delas.",
+    "Antecedentes": "Antecedentes",
+    "s.ant.lede": "Só as perguntas que importam para as técnicas marcadas, mais as que se fazem sempre. Responda sim ou não a cada uma.",
+    "Expectativas y cribado": "Expectativas e rastreio",
+    "s.exp.lede": "O que o doente espera, se é realista, e os sinais de alarme de perturbação dismórfica corporal.",
+    "s.res.lede": "Cada técnica com o seu semáforo e o porquê. O resumo para o processo clínico está pronto a descarregar ou copiar.",
+    "f.pie": "Ferramenta de apoio para médicos: as regras resumem contraindicações habituais e não substituem o resumo das características do seu produto nem o juízo clínico. Os seus dados ficam guardados apenas neste navegador.",
+    "Inicio": "Início",
+    "Paciente": "Doente",
+    "Expectativas": "Expectativas",
+    "Empezar": "Começar",
+    "Siguiente: antecedentes": "Seguinte: antecedentes",
+    "Siguiente: expectativas": "Seguinte: expectativas",
+    "Siguiente: resultado": "Seguinte: resultado",
+    "Volver al inicio": "Voltar ao início",
+    "Prueba el ejemplo: una paciente que pide toxina y relleno.": "Experimente o exemplo: uma doente que pede toxina e preenchimento.",
+    "Las técnicas marcadas deciden las preguntas.": "As técnicas marcadas decidem as perguntas.",
+    "Responde sí o no; añade el detalle si hace falta.": "Responda sim ou não; acrescente o detalhe se necessário.",
+    "El cribado no diagnostica: orienta.": "O rastreio não diagnostica: orienta.",
+    "Descarga el resumen o pásalo a la siguiente app del kit.": "Descarregue o resumo ou passe-o para a próxima app do kit.",
+    "¿Qué es AnamnesIA?": "O que é o AnamnesIA?",
+    "La segunda app del Kit EstéticIA: la primera visita guiada. Pregunta solo lo que importa para las técnicas que se plantean y cruza cada respuesta con sus contraindicaciones.": "A segunda app do Kit EstéticIA: a primeira consulta guiada. Pergunta só o que importa para as técnicas ponderadas e cruza cada resposta com as suas contraindicações.",
+    "De dónde salen las reglas": "De onde vêm as regras",
+    "Resumen las contraindicaciones y precauciones habituales de las fichas técnicas y las instrucciones de uso. Cada producto tiene las suyas y manda la de tu producto. Rojo es no tratar ahora; ámbar es precaución.": "Resumem as contraindicações e precauções habituais dos resumos das características e das instruções de utilização. Cada produto tem as suas e prevalece a do seu produto. Vermelho é não tratar agora; âmbar é precaução.",
+    "El cribado de trastorno dismórfico corporal": "O rastreio de perturbação dismórfica corporal",
+    "Las señales de alarma se basan en los criterios del DSM-5 y no son un cuestionario validado. Si usas uno validado (por ejemplo, el BDDQ-AS), anota su resultado. Un cribado positivo no es un diagnóstico: orienta a hablar con el paciente y a valorar la derivación.": "Os sinais de alarme baseiam-se nos critérios do DSM-5 e não são um questionário validado. Se usar um validado (por exemplo, o BDDQ-AS), anote o resultado. Um rastreio positivo não é um diagnóstico: orienta a falar com o doente e a ponderar a referenciação.",
+    "La ficha para el kit": "A ficha para o kit",
+    "Puedes descargar los datos en un fichero que leerán las siguientes apps del Kit EstéticIA, para no volver a preguntar lo mismo.": "Pode descarregar os dados num ficheiro que as próximas apps do Kit EstéticIA vão ler, para não voltar a perguntar o mesmo.",
+    "Sin IA y sin conexión": "Sem IA e sem ligação",
+    "La app no usa inteligencia artificial ni envía nada a ningún servidor. Las reglas se aplican en tu navegador.": "A app não usa inteligência artificial nem envia nada para nenhum servidor. As regras aplicam-se no seu navegador.",
+    "Privacidad": "Privacidade",
+    "Todo se guarda en este navegador. Usa un identificador en lugar del nombre del paciente.": "Tudo fica guardado neste navegador. Use um identificador em vez do nome do doente.",
+    "Límites": "Limites",
+    "Es una ayuda para médicos. No sustituye a la ficha técnica de tu producto, a la exploración ni al juicio clínico, y no recoge todas las contraindicaciones posibles.": "É uma ajuda para médicos. Não substitui o resumo das características do seu produto, o exame nem o juízo clínico, e não inclui todas as contraindicações possíveis.",
+  }
+};
+
+/* ══ NÚCLEO DE AnamnesIA (lógica pura, sin DOM: se prueba en Node con tests/test_nucleo.js).
+      Preguntas, técnicas, reglas de contraindicación, señales de alarma de trastorno dismórfico corporal y resumen.
+      Las reglas resumen contraindicaciones y precauciones habituales de fichas técnicas e instrucciones de uso; cada
+      producto tiene las suyas y manda la de tu producto. Textos «es|en|pt»; T3() devuelve el del idioma activo. ══ */
+const _LI = {es: 0, en: 1, pt: 2};
+const T3 = s => { const p = String(s).split('|'); return p[_LI[typeof LANG === 'string' ? LANG : 'es']] ?? p[0]; };
+const T3f = (s, ...a) => T3(s).replace(/\{(\d)\}/g, (_, i) => a[+i]);
+
+/* ── técnicas ── */
+const TEC = {
+  tox: 'Toxina botulínica|Botulinum toxin|Toxina botulínica',
+  ah: 'Relleno de ácido hialurónico|Hyaluronic acid filler|Preenchimento de ácido hialurónico',
+  bio: 'Bioestimuladores (hidroxiapatita, poliláctico, policaprolactona)|Biostimulators (hydroxylapatite, poly-L-lactic, polycaprolactone)|Bioestimuladores (hidroxiapatite, poli-L-láctico, policaprolactona)',
+  hil: 'Hilos tensores|Thread lifting|Fios tensores',
+  peel: 'Peeling químico|Chemical peel|Peeling químico',
+  meso: 'Mesoterapia y plasma rico en plaquetas|Mesotherapy and platelet-rich plasma|Mesoterapia e plasma rico em plaquetas',
+  laser: 'Láser y luz pulsada intensa|Laser and intense pulsed light|Laser e luz pulsada intensa',
+  rf: 'Radiofrecuencia y ultrasonidos focalizados|Radiofrequency and focused ultrasound|Radiofrequência e ultrassons focalizados',
+  crio: 'Criolipólisis|Cryolipolysis|Criolipólise',
+  doc: 'Ácido desoxicólico submentoniano|Submental deoxycholic acid|Ácido desoxicólico submentoniano'
+};
+const TEC_IDS = Object.keys(TEC);
+
+/* ── preguntas de sí o no: [id, grupo, texto] ── */
+const GRUPOS = {g: 'Situación actual|Current situation|Situação atual', m: 'Medicación|Medication|Medicação', e: 'Enfermedades y antecedentes|Conditions and history|Doenças e antecedentes', p: 'Piel y zona a tratar|Skin and area to treat|Pele e zona a tratar', t: 'Tratamientos previos|Previous treatments|Tratamentos prévios', a: 'Alergias|Allergies|Alergias'};
+const PREGS = [
+  ['emb', 'g', 'Embarazo o búsqueda de embarazo|Pregnancy or trying to conceive|Gravidez ou tentativa de engravidar'],
+  ['lact', 'g', 'Lactancia|Breastfeeding|Amamentação'],
+  ['inf', 'p', 'Infección, inflamación o dermatitis activa en la zona a tratar|Active infection, inflammation or dermatitis in the area to treat|Infeção, inflamação ou dermatite ativa na zona a tratar'],
+  ['anticoag', 'm', 'Anticoagulantes o antiagregantes|Anticoagulants or antiplatelet drugs|Anticoagulantes ou antiagregantes'],
+  ['isotret', 'm', 'Isotretinoína oral en los últimos 6 meses|Oral isotretinoin in the last 6 months|Isotretinoína oral nos últimos 6 meses'],
+  ['aminog', 'm', 'Aminoglucósidos u otros fármacos que afectan a la transmisión neuromuscular|Aminoglycosides or other drugs affecting neuromuscular transmission|Aminoglicosídeos ou outros fármacos que afetam a transmissão neuromuscular'],
+  ['fotosens', 'm', 'Fármacos fotosensibilizantes (tetraciclinas, retinoides, algunos diuréticos)|Photosensitising drugs (tetracyclines, retinoids, some diuretics)|Fármacos fotossensibilizantes (tetraciclinas, retinoides, alguns diuréticos)'],
+  ['inmuno', 'm', 'Inmunosupresores o corticoides sistémicos|Immunosuppressants or systemic steroids|Imunossupressores ou corticoides sistémicos'],
+  ['neuromusc', 'e', 'Enfermedad neuromuscular (miastenia gravis, síndrome de Lambert-Eaton, ELA)|Neuromuscular disease (myasthenia gravis, Lambert-Eaton syndrome, ALS)|Doença neuromuscular (miastenia gravis, síndrome de Lambert-Eaton, ELA)'],
+  ['autoinm', 'e', 'Enfermedad autoinmune activa|Active autoimmune disease|Doença autoimune ativa'],
+  ['coag', 'e', 'Trastorno de la coagulación o de las plaquetas|Coagulation or platelet disorder|Perturbação da coagulação ou das plaquetas'],
+  ['herpes', 'e', 'Herpes labial recurrente|Recurrent cold sores|Herpes labial recorrente'],
+  ['queloide', 'e', 'Queloides o cicatrización hipertrófica|Keloids or hypertrophic scarring|Queloides ou cicatrização hipertrófica'],
+  ['frio', 'e', 'Crioglobulinemia, urticaria por frío o hemoglobinuria paroxística por frío|Cryoglobulinaemia, cold urticaria or paroxysmal cold haemoglobinuria|Crioglobulinemia, urticária ao frio ou hemoglobinúria paroxística ao frio'],
+  ['raynaud', 'e', 'Fenómeno de Raynaud o mala circulación periférica|Raynaud\'s phenomenon or poor peripheral circulation|Fenómeno de Raynaud ou má circulação periférica'],
+  ['marcap', 'e', 'Marcapasos, desfibrilador u otro dispositivo electrónico implantado|Pacemaker, defibrillator or other implanted electronic device|Pacemaker, desfibrilhador ou outro dispositivo eletrónico implantado'],
+  ['epilep', 'e', 'Epilepsia desencadenada por la luz|Light-triggered epilepsy|Epilepsia desencadeada pela luz'],
+  ['cancer', 'e', 'Cáncer activo o en tratamiento|Active cancer or under treatment|Cancro ativo ou em tratamento'],
+  ['disfagia', 'e', 'Dificultad para tragar o cirugía previa del cuello|Difficulty swallowing or previous neck surgery|Dificuldade em engolir ou cirurgia prévia do pescoço'],
+  ['hernia', 'e', 'Hernia en la zona a tratar|Hernia in the area to treat|Hérnia na zona a tratar'],
+  ['bronce', 'p', 'Bronceado o exposición solar intensa en las últimas 4 semanas|Tan or intense sun exposure in the last 4 weeks|Bronzeado ou exposição solar intensa nas últimas 4 semanas'],
+  ['lesion', 'p', 'Lesión pigmentada que ha cambiado o que no tiene diagnóstico en la zona|Pigmented lesion that has changed or has no diagnosis in the area|Lesão pigmentada que mudou ou sem diagnóstico na zona'],
+  ['vitiligo', 'p', 'Vitíligo, psoriasis u otra dermatosis con fenómeno de Koebner|Vitiligo, psoriasis or other dermatosis with Koebner phenomenon|Vitiligo, psoríase ou outra dermatose com fenómeno de Koebner'],
+  ['metal', 'p', 'Implantes metálicos en la zona a tratar|Metal implants in the area to treat|Implantes metálicos na zona a tratar'],
+  ['permanente', 't', 'Relleno permanente o desconocido en la zona (silicona, poliacrilamida…)|Permanent or unknown filler in the area (silicone, polyacrylamide…)|Preenchimento permanente ou desconhecido na zona (silicone, poliacrilamida…)'],
+  ['complic', 't', 'Complicaciones en tratamientos estéticos previos|Complications from previous aesthetic treatments|Complicações em tratamentos estéticos prévios'],
+  ['alerAnest', 'a', 'Alergia a anestésicos locales|Allergy to local anaesthetics|Alergia a anestésicos locais'],
+  ['alerProd', 'a', 'Alergia o reacción previa al producto que se plantea|Allergy or previous reaction to the product being considered|Alergia ou reação prévia ao produto ponderado'],
+  ['alerHya', 'a', 'Alergia a picaduras de abeja o avispa (relevante para la hialuronidasa)|Allergy to bee or wasp stings (relevant to hyaluronidase)|Alergia a picadas de abelha ou vespa (relevante para a hialuronidase)']
+];
+const PREG_ID = Object.fromEntries(PREGS.map(p => [p[0], p]));
+/* preguntas obligatorias siempre, sean cuales sean las técnicas */
+const OBLIG = ['emb', 'lact', 'inf', 'anticoag', 'alerAnest', 'alerProd'];
+
+/* ── reglas: técnica → [[pregunta o condición, nivel (r = no tratar · a = precaución), motivo]] ── */
+const NO_ELECT = 'Tratamiento electivo: la ficha técnica o las instrucciones de uso no lo recomiendan o no hay datos de seguridad.|Elective treatment: the product information or instructions for use do not recommend it or there are no safety data.|Tratamento eletivo: o resumo das características ou as instruções de utilização não o recomendam ou não há dados de segurança.';
+const INF = 'Infección o inflamación activa en la zona: se trata primero y se pospone.|Active infection or inflammation in the area: treat it first and postpone.|Infeção ou inflamação ativa na zona: trata-se primeiro e adia-se.';
+const ACO = 'Más riesgo de hematoma. No suspendas un anticoagulante por tu cuenta: consulta con quien lo prescribió.|Higher risk of bruising. Do not stop an anticoagulant on your own: consult the prescriber.|Maior risco de hematoma. Não suspenda um anticoagulante por sua conta: consulte quem o prescreveu.';
+const ALP = 'Alergia o reacción previa al producto: comprueba la composición y elige otro.|Allergy or previous reaction to the product: check the composition and choose another.|Alergia ou reação prévia ao produto: verifique a composição e escolha outro.';
+const REGLAS = {
+  tox: [['emb', 'r', NO_ELECT], ['lact', 'r', NO_ELECT], ['inf', 'r', INF], ['alerProd', 'r', ALP], ['neuromusc', 'r', 'Enfermedad de la unión neuromuscular: contraindicada en la ficha técnica.|Neuromuscular junction disease: contraindicated in the product information.|Doença da junção neuromuscular: contraindicada no resumo das características.'],
+    ['aminog', 'a', 'Los aminoglucósidos pueden potenciar el efecto de la toxina.|Aminoglycosides can potentiate the effect of the toxin.|Os aminoglicosídeos podem potenciar o efeito da toxina.'], ['anticoag', 'a', ACO], ['disfagia', 'a', 'Antecedente de disfagia: precaución si se trata el cuello o el tercio inferior.|History of dysphagia: caution if treating the neck or lower face.|Antecedente de disfagia: precaução se tratar o pescoço ou o terço inferior.']],
+  ah: [['emb', 'r', NO_ELECT], ['lact', 'r', NO_ELECT], ['inf', 'r', INF], ['alerProd', 'r', ALP], ['alerAnest', 'a', 'Muchos rellenos llevan lidocaína: elige uno sin anestésico o confirma la alergia.|Many fillers contain lidocaine: choose one without anaesthetic or confirm the allergy.|Muitos preenchimentos contêm lidocaína: escolha um sem anestésico ou confirme a alergia.'],
+    ['anticoag', 'a', ACO], ['autoinm', 'a', 'Enfermedad autoinmune activa: más riesgo de reacción inflamatoria; valora posponer.|Active autoimmune disease: higher risk of inflammatory reaction; consider postponing.|Doença autoimune ativa: maior risco de reação inflamatória; pondere adiar.'], ['herpes', 'a', 'Herpes recurrente: si se trata la zona perioral, valora profilaxis antiviral.|Recurrent cold sores: if treating the perioral area, consider antiviral prophylaxis.|Herpes recorrente: se tratar a zona perioral, pondere profilaxia antiviral.'],
+    ['permanente', 'a', 'Relleno permanente o desconocido en la zona: más riesgo de complicaciones; la ecografía ayuda a saber qué hay.|Permanent or unknown filler in the area: higher risk of complications; ultrasound helps to know what is there.|Preenchimento permanente ou desconhecido na zona: maior risco de complicações; a ecografia ajuda a saber o que existe.'],
+    ['alerHya', 'a', 'Posible alergia a la hialuronidasa, el antídoto del ácido hialurónico: tenlo en cuenta en el plan de urgencias.|Possible allergy to hyaluronidase, the antidote to hyaluronic acid: take it into account in the emergency plan.|Possível alergia à hialuronidase, o antídoto do ácido hialurónico: tenha-o em conta no plano de urgência.'],
+    ['complic', 'a', 'Complicaciones previas: averigua cuáles y con qué producto antes de tratar.|Previous complications: find out which and with which product before treating.|Complicações prévias: averigue quais e com que produto antes de tratar.']],
+  bio: [['emb', 'r', NO_ELECT], ['lact', 'r', NO_ELECT], ['inf', 'r', INF], ['alerProd', 'r', ALP], ['queloide', 'a', 'Queloides: algunas instrucciones de uso lo contraindican; compruébalo para tu producto.|Keloids: some instructions for use contraindicate it; check for your product.|Queloides: algumas instruções de utilização contraindicam-no; verifique para o seu produto.'],
+    ['autoinm', 'a', 'Enfermedad autoinmune activa: más riesgo de nódulos y reacciones; valora posponer.|Active autoimmune disease: higher risk of nodules and reactions; consider postponing.|Doença autoimune ativa: maior risco de nódulos e reações; pondere adiar.'], ['anticoag', 'a', ACO], ['permanente', 'a', 'Relleno permanente o desconocido en la zona: más riesgo de complicaciones.|Permanent or unknown filler in the area: higher risk of complications.|Preenchimento permanente ou desconhecido na zona: maior risco de complicações.']],
+  hil: [['emb', 'r', NO_ELECT], ['lact', 'r', NO_ELECT], ['inf', 'r', INF], ['anticoag', 'a', ACO], ['queloide', 'a', 'Queloides: riesgo en los puntos de entrada.|Keloids: risk at the entry points.|Queloides: risco nos pontos de entrada.'], ['autoinm', 'a', 'Enfermedad autoinmune activa: más riesgo de reacción; valora posponer.|Active autoimmune disease: higher risk of reaction; consider postponing.|Doença autoimune ativa: maior risco de reação; pondere adiar.'], ['permanente', 'a', 'Relleno permanente en la zona: puede dificultar la colocación y aumentar el riesgo.|Permanent filler in the area: may hinder placement and increase risk.|Preenchimento permanente na zona: pode dificultar a colocação e aumentar o risco.']],
+  peel: [['inf', 'r', INF], ['emb', 'a', 'Embarazo: evita el ácido salicílico y los peelings medios y profundos.|Pregnancy: avoid salicylic acid and medium and deep peels.|Gravidez: evite o ácido salicílico e os peelings médios e profundos.'], ['lact', 'a', 'Lactancia: evita el ácido salicílico y los peelings medios y profundos.|Breastfeeding: avoid salicylic acid and medium and deep peels.|Amamentação: evite o ácido salicílico e os peelings médios e profundos.'],
+    ['isotret', 'a', 'Isotretinoína reciente: evita los peelings medios y profundos; la recomendación clásica es esperar de 6 a 12 meses.|Recent isotretinoin: avoid medium and deep peels; the classic recommendation is to wait 6 to 12 months.|Isotretinoína recente: evite os peelings médios e profundos; a recomendação clássica é esperar 6 a 12 meses.'], ['herpes', 'a', 'Herpes recurrente: profilaxis antiviral antes de un peeling medio.|Recurrent cold sores: antiviral prophylaxis before a medium peel.|Herpes recorrente: profilaxia antiviral antes de um peeling médio.'],
+    ['queloide', 'a', 'Queloides: evita los peelings medios y profundos.|Keloids: avoid medium and deep peels.|Queloides: evite os peelings médios e profundos.'], ['bronce', 'a', 'Bronceado reciente: más riesgo de hiperpigmentación; pospón.|Recent tan: higher risk of hyperpigmentation; postpone.|Bronzeado recente: maior risco de hiperpigmentação; adie.'], ['fotosens', 'a', 'Fármacos fotosensibilizantes: más riesgo de reacción.|Photosensitising drugs: higher risk of reaction.|Fármacos fotossensibilizantes: maior risco de reação.'], ['FOTO_ALTO', 'a', 'Fototipo IV a VI: riesgo de hiperpigmentación postinflamatoria; preparación y agentes superficiales.|Phototype IV to VI: risk of post-inflammatory hyperpigmentation; priming and superficial agents.|Fototipo IV a VI: risco de hiperpigmentação pós-inflamatória; preparação e agentes superficiais.']],
+  meso: [['emb', 'r', NO_ELECT], ['lact', 'r', NO_ELECT], ['inf', 'r', INF], ['alerProd', 'r', ALP], ['coag', 'a', 'Trastorno de las plaquetas o de la coagulación: el plasma rico en plaquetas puede no ser útil y hay más riesgo de hematoma.|Platelet or coagulation disorder: platelet-rich plasma may not be useful and there is a higher risk of bruising.|Perturbação das plaquetas ou da coagulação: o plasma rico em plaquetas pode não ser útil e há maior risco de hematoma.'], ['anticoag', 'a', ACO], ['cancer', 'a', 'Cáncer activo: valora con su especialista antes de usar factores de crecimiento.|Active cancer: discuss with the specialist before using growth factors.|Cancro ativo: avalie com o especialista antes de usar fatores de crescimento.'], ['inmuno', 'a', 'Inmunosupresión: más riesgo de infección.|Immunosuppression: higher risk of infection.|Imunossupressão: maior risco de infeção.']],
+  laser: [['lesion', 'r', 'Lesión pigmentada sin diagnóstico: no se trata con láser ni luz hasta tenerlo.|Undiagnosed pigmented lesion: do not treat with laser or light until there is a diagnosis.|Lesão pigmentada sem diagnóstico: não se trata com laser nem luz até haver diagnóstico.'], ['bronce', 'r', 'Bronceado reciente: la melanina epidérmica compite con la diana; pospón la sesión.|Recent tan: epidermal melanin competes with the target; postpone the session.|Bronzeado recente: a melanina epidérmica compete com o alvo; adie a sessão.'], ['inf', 'r', INF],
+    ['emb', 'a', 'Embarazo: los tratamientos con láser o luz suelen posponerse.|Pregnancy: laser or light treatments are usually postponed.|Gravidez: os tratamentos com laser ou luz costumam adiar-se.'], ['fotosens', 'a', 'Fármacos fotosensibilizantes: más riesgo de quemadura.|Photosensitising drugs: higher risk of burns.|Fármacos fotossensibilizantes: maior risco de queimadura.'], ['isotret', 'a', 'Isotretinoína reciente: evita los láseres ablativos.|Recent isotretinoin: avoid ablative lasers.|Isotretinoína recente: evite os lasers ablativos.'],
+    ['epilep', 'a', 'Epilepsia fotosensible: precaución con la luz pulsada.|Photosensitive epilepsy: caution with pulsed light.|Epilepsia fotossensível: precaução com a luz pulsada.'], ['vitiligo', 'a', 'Dermatosis con fenómeno de Koebner: puede aparecer en la zona tratada.|Dermatosis with Koebner phenomenon: it may appear in the treated area.|Dermatose com fenómeno de Koebner: pode surgir na zona tratada.'], ['herpes', 'a', 'Herpes recurrente: profilaxis si se trata la zona perioral.|Recurrent cold sores: prophylaxis if treating the perioral area.|Herpes recorrente: profilaxia se tratar a zona perioral.'], ['FOTO_ALTO', 'a', 'Fototipo IV a VI: longitud de onda larga, pulsos largos, enfriamiento y prueba previa.|Phototype IV to VI: long wavelength, long pulses, cooling and a test spot.|Fototipo IV a VI: comprimento de onda longo, pulsos longos, arrefecimento e teste prévio.']],
+  rf: [['marcap', 'r', 'Dispositivo electrónico implantado: contraindicado con radiofrecuencia.|Implanted electronic device: contraindicated with radiofrequency.|Dispositivo eletrónico implantado: contraindicado com radiofrequência.'], ['metal', 'r', 'Implantes metálicos en la zona: contraindicada la radiofrecuencia sobre ellos.|Metal implants in the area: radiofrequency over them is contraindicated.|Implantes metálicos na zona: contraindicada a radiofrequência sobre eles.'], ['emb', 'r', NO_ELECT], ['inf', 'r', INF], ['permanente', 'a', 'Relleno permanente en la zona: comprueba las instrucciones del equipo.|Permanent filler in the area: check the device instructions.|Preenchimento permanente na zona: verifique as instruções do equipamento.'], ['queloide', 'a', 'Queloides: precaución con las técnicas fraccionadas.|Keloids: caution with fractional techniques.|Queloides: precaução com as técnicas fracionadas.']],
+  crio: [['frio', 'r', 'Crioglobulinemia, urticaria por frío o hemoglobinuria paroxística por frío: contraindicada.|Cryoglobulinaemia, cold urticaria or paroxysmal cold haemoglobinuria: contraindicated.|Crioglobulinemia, urticária ao frio ou hemoglobinúria paroxística ao frio: contraindicada.'], ['emb', 'r', NO_ELECT], ['inf', 'r', INF], ['hernia', 'a', 'Hernia en la zona: no apliques el aplicador sobre ella.|Hernia in the area: do not apply the applicator over it.|Hérnia na zona: não aplique o aplicador sobre ela.'], ['raynaud', 'a', 'Raynaud o mala circulación: precaución con el frío.|Raynaud\'s or poor circulation: caution with cold.|Raynaud ou má circulação: precaução com o frio.'], ['IMC_OB', 'a', 'Índice de masa corporal de 30 o más: el contorno corporal no trata la obesidad; ajusta la indicación y las expectativas.|Body mass index of 30 or more: body contouring does not treat obesity; adjust the indication and expectations.|Índice de massa corporal de 30 ou mais: o contorno corporal não trata a obesidade; ajuste a indicação e as expectativas.']],
+  doc: [['emb', 'r', NO_ELECT], ['lact', 'r', NO_ELECT], ['inf', 'r', INF], ['alerProd', 'r', ALP], ['disfagia', 'a', 'Disfagia o cirugía previa del cuello: precaución y valoración previa.|Dysphagia or previous neck surgery: caution and prior assessment.|Disfagia ou cirurgia prévia do pescoço: precaução e avaliação prévia.'], ['anticoag', 'a', ACO], ['IMC_OB', 'a', 'Índice de masa corporal de 30 o más: valora si la grasa submentoniana es la causa principal.|Body mass index of 30 or more: consider whether submental fat is the main cause.|Índice de massa corporal de 30 ou mais: avalie se a gordura submentoniana é a causa principal.']]
+};
+/* condiciones derivadas de datos no binarios */
+const imc = (kg, cm) => kg > 0 && cm > 0 ? kg / (cm / 100) ** 2 : NaN;
+function cond(c, d) {
+  if (c === 'FOTO_ALTO') return +d.foto >= 4 ? 'si' : d.foto ? 'no' : undefined;
+  if (c === 'IMC_OB') { const x = imc(+d.kg, +d.talla); return isFinite(x) ? (x >= 30 ? 'si' : 'no') : undefined; }
+  return d.r[c];
+}
+
+/* ── señales de alarma de trastorno dismórfico corporal (basadas en los criterios DSM-5; no es un cuestionario validado) ── */
+const TDC = [
+  ['defecto', 'Le preocupa un defecto que tú no ves o que es mínimo|They are concerned about a defect you cannot see or that is minimal|Preocupa-o um defeito que não vê ou que é mínimo'],
+  ['tiempo', 'Piensa en ello más de una hora al día|They think about it for more than an hour a day|Pensa nisso mais de uma hora por dia'],
+  ['conducta', 'Conductas repetitivas: espejo, camuflaje, comparación o búsqueda de aprobación|Repetitive behaviours: mirror checking, camouflage, comparing or seeking reassurance|Comportamentos repetitivos: espelho, camuflagem, comparação ou procura de aprovação'],
+  ['deterioro', 'Le causa malestar intenso o le afecta en la vida social, la pareja o el trabajo|It causes intense distress or affects their social life, relationships or work|Causa-lhe sofrimento intenso ou afeta a vida social, a relação ou o trabalho'],
+  ['repite', 'Varios tratamientos o clínicas por lo mismo, sin quedar satisfecho|Several treatments or clinics for the same concern without being satisfied|Vários tratamentos ou clínicas pelo mesmo motivo, sem ficar satisfeito']
+];
+/* resultado: 'alta' (no tratar hoy), 'media' (valorar), 'baja' */
+function cribadoTDC(d) {
+  if (d.cuest === 'pos') return 'alta';
+  const n = TDC.filter(([k]) => d.tdc[k] === 'si').length, nucleo = d.tdc.defecto === 'si' && d.tdc.deterioro === 'si';
+  return nucleo || n >= 3 ? 'alta' : n >= 1 ? 'media' : 'baja';
+}
+
+/* ── evaluación ── */
+const NIV = {r: 2, a: 1};
+function evalua(d) {
+  const tecs = TEC_IDS.filter(t => d.tec[t]), res = {}, faltan = new Set();
+  const usadas = new Set(OBLIG);
+  tecs.forEach(t => REGLAS[t].forEach(([c]) => { if (PREG_ID[c]) usadas.add(c); }));
+  usadas.forEach(q => { if (!d.r[q]) faltan.add(q); });
+  if (!(+d.edad > 0)) faltan.add('EDAD');
+  if (tecs.some(t => REGLAS[t].some(r => r[0] === 'FOTO_ALTO')) && !d.foto) faltan.add('FOTO');
+  if (tecs.some(t => REGLAS[t].some(r => r[0] === 'IMC_OB')) && !isFinite(imc(+d.kg, +d.talla))) faltan.add('IMC');
+  const tdc = cribadoTDC(d), menor = +d.edad > 0 && +d.edad < 18, expec = d.expec === 'no';
+  if (!d.cuest && TDC.some(([k]) => !d.tdc[k])) faltan.add('TDC');
+  if (!d.expec) faltan.add('EXPEC');
+  for (const t of tecs) {
+    const m = [];
+    if (menor) m.push({n: 'r', c: 'MENOR'});
+    if (tdc === 'alta') m.push({n: 'r', c: 'TDC'});
+    for (const [c, n, txt] of REGLAS[t]) if (cond(c, d) === 'si') m.push({n, c, txt});
+    if (tdc === 'media') m.push({n: 'a', c: 'TDC'});
+    if (expec) m.push({n: 'a', c: 'EXPEC'});
+    const nivel = m.reduce((a, x) => Math.max(a, NIV[x.n]), 0);
+    res[t] = {nivel, m: m.sort((a, b) => NIV[b.n] - NIV[a.n])};
+  }
+  return {tecs, res, faltan: [...usadas].filter(q => faltan.has(q)).concat(['EDAD', 'FOTO', 'IMC', 'TDC', 'EXPEC'].filter(x => faltan.has(x))), tdc, preguntas: [...usadas]};
+}
+const GLOBAL_TXT = {
+  MENOR: 'Menor de edad: estos tratamientos están indicados en adultos.|Minor: these treatments are indicated in adults.|Menor de idade: estes tratamentos estão indicados em adultos.',
+  TDC: {alta: 'Señales de trastorno dismórfico corporal: no tratar hoy; habla con el paciente y valora la derivación a salud mental.|Signs of body dysmorphic disorder: do not treat today; talk with the patient and consider referral to mental health.|Sinais de perturbação dismórfica corporal: não tratar hoje; fale com o doente e pondere a referenciação para saúde mental.', media: 'Alguna señal de alarma de trastorno dismórfico corporal: explora más antes de tratar.|Some warning signs of body dysmorphic disorder: explore further before treating.|Algum sinal de alarme de perturbação dismórfica corporal: explore mais antes de tratar.'},
+  EXPEC: 'Expectativas poco realistas: acuérdalas antes de tratar.|Unrealistic expectations: agree on them before treating.|Expectativas pouco realistas: acorde-as antes de tratar.'
+};
+const txtMotivo = (x, tdc) => x.c === 'MENOR' ? T3(GLOBAL_TXT.MENOR) : x.c === 'TDC' ? T3(GLOBAL_TXT.TDC[tdc]) : x.c === 'EXPEC' ? T3(GLOBAL_TXT.EXPEC) : (x.txt === NO_ELECT || x.txt === ACO) && PREG_ID[x.c] ? `${T3(PREG_ID[x.c][2])}. ${T3(x.txt)}` : T3(x.txt);
+const nomFalta = f => f === 'EDAD' ? T3('Edad|Age|Idade') : f === 'FOTO' ? T3('Fototipo|Phototype|Fototipo') : f === 'IMC' ? T3('Peso y talla|Weight and height|Peso e altura') : f === 'TDC' ? T3('Cribado de trastorno dismórfico corporal|Body dysmorphic disorder screening|Rastreio de perturbação dismórfica corporal') : f === 'EXPEC' ? T3('Valoración de las expectativas|Assessment of expectations|Avaliação das expectativas') : T3(PREG_ID[f][2]);
+
+/* ── resumen para la historia clínica (Markdown) ── */
+const NIVN = ['Sin contraindicaciones detectadas|No contraindications detected|Sem contraindicações detetadas', 'Precaución|Caution|Precaução', 'No tratar ahora|Do not treat now|Não tratar agora'];
+function resumenMd(d, ev, fecha = Date.now()) {
+  const L = (a, b) => b ? `- **${T3(a)}:** ${b}\n` : '', sexo = {m: 'Mujer|Female|Mulher', h: 'Hombre|Male|Homem', o: 'Otro|Other|Outro'};
+  const x = imc(+d.kg, +d.talla);
+  let md = `## ${T3('Paciente|Patient|Doente')}\n` + L('Identificador|Identifier|Identificador', d.id) + L('Fecha|Date|Data', new Date(fecha).toLocaleDateString(typeof locale === 'function' ? locale() : 'es-ES')) + L('Edad|Age|Idade', d.edad) + L('Sexo|Sex|Sexo', d.sexo ? T3(sexo[d.sexo]) : '') +
+    L('Fototipo|Phototype|Fototipo', d.foto ? ['I', 'II', 'III', 'IV', 'V', 'VI'][+d.foto - 1] : '') + L('Índice de masa corporal|Body mass index|Índice de massa corporal', isFinite(x) ? x.toFixed(1).replace('.', LANG === 'en' ? '.' : ',') + ' kg/m²' : '') +
+    L('Motivo de consulta|Reason for consultation|Motivo da consulta', d.motivo) + L('Técnicas que se plantean|Techniques considered|Técnicas ponderadas', ev.tecs.map(t => T3(TEC[t])).join('; '));
+  const si = ev.preguntas.filter(q => d.r[q] === 'si'), no = ev.preguntas.filter(q => d.r[q] === 'no');
+  md += `\n## ${T3('Anamnesis|History|Anamnese')}\n` + (si.length ? si.map(q => `- ${T3('Sí|Yes|Sim')}: ${T3(PREG_ID[q][2])}${d.det[q] ? ` (${d.det[q]})` : ''}`).join('\n') + '\n' : '') +
+    (no.length ? `- ${T3('Niega|Denies|Nega')}: ${no.map(q => T3(PREG_ID[q][2]).toLowerCase()).join('; ')}\n` : '') + L('Medicación habitual|Regular medication|Medicação habitual', d.med) + L('Alergias|Allergies|Alergias', d.alergias) + L('Tratamientos estéticos previos|Previous aesthetic treatments|Tratamentos estéticos prévios', d.previos);
+  const tdcN = {alta: 'señales de alarma presentes|warning signs present|sinais de alarme presentes', media: 'alguna señal de alarma|some warning signs|algum sinal de alarme', baja: 'sin señales de alarma|no warning signs|sem sinais de alarme'};
+  md += `\n## ${T3('Expectativas y cribado|Expectations and screening|Expectativas e rastreio')}\n` + L('Lo que espera|What they expect|O que espera', d.espera) + L('Expectativas|Expectations|Expectativas', d.expec ? T3(d.expec === 'si' ? 'realistas|realistic|realistas' : 'poco realistas|unrealistic|pouco realistas') : '') +
+    L('Cuestionario validado|Validated questionnaire|Questionário validado', d.cuest ? T3({pos: 'positivo|positive|positivo', neg: 'negativo|negative|negativo', no: 'no realizado|not done|não realizado'}[d.cuest]) + (d.cuestN ? ` (${d.cuestN})` : '') : '') + L('Trastorno dismórfico corporal|Body dysmorphic disorder|Perturbação dismórfica corporal', T3(tdcN[ev.tdc]));
+  md += `\n## ${T3('Contraindicaciones y precauciones por técnica|Contraindications and precautions by technique|Contraindicações e precauções por técnica')}\n` + ev.tecs.map(t => { const r = ev.res[t]; return `- **${T3(TEC[t])}:** ${T3(NIVN[r.nivel])}${r.m.length ? '. ' + r.m.map(x => txtMotivo(x, ev.tdc)).join(' ') : ''}`; }).join('\n') + '\n';
+  if (ev.faltan.length) md += `\n> ${T3('Datos sin completar|Incomplete data|Dados por completar')}: ${ev.faltan.map(nomFalta).join('; ')}\n`;
+  if (d.notas) md += `\n## ${T3('Observaciones|Notes|Observações')}\n${d.notas}\n`;
+  return md;
+}
+/* ficha para el resto del kit (sin texto clínico libre traducido: datos) */
+const fichaKit = (d, ev) => ({formato: 'kitesteticia-paciente/1', app: 'AnamnesIA', fecha: new Date().toISOString(), paciente: {id: d.id, edad: d.edad, sexo: d.sexo, foto: d.foto, kg: d.kg, talla: d.talla}, tecnicas: ev.tecs, respuestas: d.r, detalles: d.det, cribadoTDC: ev.tdc, expectativas: d.expec, resultado: Object.fromEntries(ev.tecs.map(t => [t, {nivel: ev.res[t].nivel, motivos: ev.res[t].m.map(x => x.c)}]))});
+if (typeof module !== 'undefined') module.exports = {T3, TEC, TEC_IDS, GRUPOS, PREGS, PREG_ID, OBLIG, REGLAS, TDC, cribadoTDC, evalua, imc, cond, resumenMd, fichaKit, txtMotivo, nomFalta};
+
+/* ══ AnamnesIA · interfaz. La lógica (preguntas, reglas, cribado, resumen) está en nucleo.js. Sin IA y sin red.
+      Textos propios «es|en|pt» con T3(); navegación y HTML con t() y src/i18n.js. ══ */
+const STEPS = ['Inicio', 'Paciente', 'Antecedentes', 'Expectativas', 'Resultado'];
+const NAV = [['Empezar', 'Prueba el ejemplo: una paciente que pide toxina y relleno.'], ['Siguiente: antecedentes', 'Las técnicas marcadas deciden las preguntas.'], ['Siguiente: expectativas', 'Responde sí o no; añade el detalle si hace falta.'], ['Siguiente: resultado', 'El cribado no diagnostica: orienta.'], ['Volver al inicio', 'Descarga el resumen o pásalo a la siguiente app del kit.']];
+const RENDER = {0: pintaInicio, 1: pintaPac, 2: pintaAnt, 3: pintaExp, 4: pintaRes};
+const GLOS = [
+  ['¿Qué es AnamnesIA?', 'La segunda app del Kit EstéticIA: la primera visita guiada. Pregunta solo lo que importa para las técnicas que se plantean y cruza cada respuesta con sus contraindicaciones.'],
+  ['De dónde salen las reglas', 'Resumen las contraindicaciones y precauciones habituales de las fichas técnicas y las instrucciones de uso. Cada producto tiene las suyas y manda la de tu producto. Rojo es no tratar ahora; ámbar es precaución.'],
+  ['El cribado de trastorno dismórfico corporal', 'Las señales de alarma se basan en los criterios del DSM-5 y no son un cuestionario validado. Si usas uno validado (por ejemplo, el BDDQ-AS), anota su resultado. Un cribado positivo no es un diagnóstico: orienta a hablar con el paciente y a valorar la derivación.'],
+  ['La ficha para el kit', 'Puedes descargar los datos en un fichero que leerán las siguientes apps del Kit EstéticIA, para no volver a preguntar lo mismo.'],
+  ['Sin IA y sin conexión', 'La app no usa inteligencia artificial ni envía nada a ningún servidor. Las reglas se aplican en tu navegador.'],
+  ['Privacidad', 'Todo se guarda en este navegador. Usa un identificador en lugar del nombre del paciente.'],
+  ['Límites', 'Es una ayuda para médicos. No sustituye a la ficha técnica de tu producto, a la exploración ni al juicio clínico, y no recoge todas las contraindicaciones posibles.']
+];
+const D0 = () => ({id: '', edad: '', sexo: '', foto: '', kg: '', talla: '', motivo: '', tec: {}, r: {}, det: {}, med: '', alergias: '', previos: '', espera: '', expec: '', cuest: '', cuestN: '', tdc: {}, notas: '', ts: Date.now()});
+let S = {d: D0(), hist: [], esEjemplo: false};
+const sn = (name, val, lab) => `<fieldset class="a-sn"><legend>${lab}</legend><label><input type="radio" name="${name}" value="si" ${val === 'si' ? 'checked' : ''}> <span>${esc(T3('Sí|Yes|Sim'))}</span></label><label><input type="radio" name="${name}" value="no" ${val === 'no' ? 'checked' : ''}> <span>${esc(T3('No|No|Não'))}</span></label></fieldset>`;
+const campo = (k, lab, im) => `<div class="field"><label for="d_${k}">${esc(T3(lab))}</label><input id="d_${k}" data-d="${k}" type="text" ${im ? `inputmode="${im}"` : ''} value="${esc(S.d[k] || '')}" autocomplete="off"></div>`;
+const area = (k, lab, rows = 2) => `<div class="field"><label for="d_${k}">${esc(T3(lab))}</label><textarea id="d_${k}" data-d="${k}" rows="${rows}">${esc(S.d[k] || '')}</textarea></div>`;
+function enlazaCampos(box) { $$(`#${box} input[data-d],#${box} textarea[data-d]`).forEach(x => x.oninput = () => { S.d[x.dataset.d] = x.value; S.esEjemplo = false; guarda(); }); }
+const repinta = fn => { const y = window.scrollY, f = document.activeElement?.name; fn(); window.scrollTo(0, y); if (f) { const el = document.querySelector(`input[name="${f}"]:checked`); if (el) el.focus(); } };
+
+/* ── 0 · inicio ── */
+function pintaInicio() {
+  const n = S.hist.length, hay = S.d.id || Object.keys(S.d.tec).some(k => S.d.tec[k]);
+  $('inicioProj').innerHTML = (hay || n) ? `${esc(hay ? T3('Tienes una primera visita en curso en este navegador.|You have a first visit in progress in this browser.|Tem uma primeira consulta em curso neste navegador.') : T3f('Tienes {0} primera(s) visita(s) guardada(s).|You have {0} saved first visit(s).|Tem {0} primeira(s) consulta(s) guardada(s).', n))} <button class="btn btn-ghost btn-sm" id="btnCont" type="button">${esc(T3('Continuar|Continue|Continuar'))}</button>` : '';
+}
+$('btnStart').onclick = () => go(1);
+$('btnEjemplo').onclick = () => { aplicaEjemplo(); guarda(); go(4); toast(T3('Ejemplo de demostración|Demonstration example|Exemplo de demonstração')); };
+document.addEventListener('click', e => { if (e.target.closest('#btnCont')) go(S.d.id || Object.keys(S.d.tec).length ? 1 : 4); });
+
+/* ── 1 · paciente y técnicas ── */
+function pintaPac() {
+  const d = S.d, sx = [['m', 'Mujer|Female|Mulher'], ['h', 'Hombre|Male|Homem'], ['o', 'Otro|Other|Outro']];
+  $('pacBox').innerHTML = `<div class="card"><div class="a-f3">${campo('id', 'Identificador (no el nombre)|Identifier (not the name)|Identificador (não o nome)')}${campo('edad', 'Edad|Age|Idade', 'numeric')}
+      <div class="field"><label for="d_sexo">${esc(T3('Sexo|Sex|Sexo'))}</label><select id="d_sexo" data-d="sexo"><option value=""></option>${sx.map(([k, l]) => `<option value="${k}" ${d.sexo === k ? 'selected' : ''}>${esc(T3(l))}</option>`).join('')}</select></div>
+      <div class="field"><label for="d_foto">${esc(T3('Fototipo de Fitzpatrick|Fitzpatrick phototype|Fototipo de Fitzpatrick'))}</label><select id="d_foto" data-d="foto"><option value=""></option>${['I', 'II', 'III', 'IV', 'V', 'VI'].map((r, i) => `<option value="${i + 1}" ${+d.foto === i + 1 ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
+      ${campo('kg', 'Peso (kg)|Weight (kg)|Peso (kg)', 'decimal')}${campo('talla', 'Talla (cm)|Height (cm)|Altura (cm)', 'numeric')}</div>
+      ${area('motivo', 'Motivo de consulta, con sus palabras|Reason for consultation, in their own words|Motivo da consulta, pelas suas palavras')}</div>
+    <div class="card"><h3>${esc(T3('Técnicas que se plantean|Techniques considered|Técnicas ponderadas'))}</h3><p class="help">${esc(T3('Marca todas las que se puedan plantear hoy; las preguntas de los antecedentes dependen de ellas.|Tick all those that may be considered today; the history questions depend on them.|Marque todas as que se possam ponderar hoje; as perguntas dos antecedentes dependem delas.'))}</p>
+      <div class="a-tecs">${TEC_IDS.map(t => `<label class="fa-chk a-tec"><input type="checkbox" data-tec="${t}" ${d.tec[t] ? 'checked' : ''}> <span>${esc(T3(TEC[t]))}</span></label>`).join('')}</div></div>`;
+  enlazaCampos('pacBox');
+  $$('#pacBox select[data-d]').forEach(x => x.onchange = () => { S.d[x.dataset.d] = x.value; S.esEjemplo = false; guarda(); });
+  $$('[data-tec]').forEach(x => x.onchange = () => { S.d.tec[x.dataset.tec] = x.checked; S.esEjemplo = false; guarda(); });
+}
+
+/* ── 2 · antecedentes ── */
+function pintaAnt() {
+  const ev = evalua(S.d), qs = new Set(ev.preguntas), d = S.d;
+  const grupos = Object.keys(GRUPOS).map(g => { const ps = PREGS.filter(p => p[1] === g && qs.has(p[0])); if (!ps.length) return ''; return `<div class="card"><h3>${esc(T3(GRUPOS[g]))}</h3>${ps.map(([id, , tx]) => `<div class="a-q${d.r[id] ? '' : ' a-pend'}">${sn('q_' + id, d.r[id], esc(T3(tx)))}${d.r[id] === 'si' ? `<input class="a-det" type="text" data-det="${id}" value="${esc(d.det[id] || '')}" placeholder="${esc(T3('Detalle (opcional)|Detail (optional)|Detalhe (opcional)'))}" aria-label="${esc(T3('Detalle|Detail|Detalhe'))}" autocomplete="off">` : ''}</div>`).join('')}</div>`; }).join('');
+  const pend = ev.preguntas.filter(q => !d.r[q]).length;
+  $('antBox').innerHTML = `${!ev.tecs.length ? `<div class="aviso">${esc(T3('No has marcado ninguna técnica: solo verás las preguntas que se hacen siempre.|You have not ticked any technique: you will only see the questions that are always asked.|Não marcou nenhuma técnica: só verá as perguntas que se fazem sempre.'))}</div>` : ''}
+    <div class="a-prog"><span class="fa-chip ${pend ? 'aviso' : 'ok'}">${esc(pend ? T3f('{0} sin responder|{0} unanswered|{0} por responder', pend) : T3('Todas respondidas|All answered|Todas respondidas'))}</span>${pend ? `<button class="btn btn-ghost btn-sm" type="button" id="todoNo">${esc(T3('Marcar «no» en las que faltan|Mark «no» on the rest|Marcar «não» nas que faltam'))}</button>` : ''}</div>
+    ${grupos}<div class="card">${area('med', 'Medicación habitual|Regular medication|Medicação habitual')}${area('alergias', 'Alergias (cuáles)|Allergies (which)|Alergias (quais)')}${area('previos', 'Tratamientos estéticos previos: qué, dónde y cuándo|Previous aesthetic treatments: what, where and when|Tratamentos estéticos prévios: o quê, onde e quando')}</div>`;
+  $$('#antBox input[type=radio]').forEach(x => x.onchange = () => { S.d.r[x.name.slice(2)] = x.value; S.esEjemplo = false; guarda(); repinta(pintaAnt); });
+  $$('[data-det]').forEach(x => x.oninput = () => { S.d.det[x.dataset.det] = x.value; guarda(); });
+  if ($('todoNo')) $('todoNo').onclick = () => { if (!confirm(T3('¿Marcar «no» en todas las preguntas sin responder? Hazlo solo si las has preguntado.|Mark «no» on all unanswered questions? Only do so if you have asked them.|Marcar «não» em todas as perguntas por responder? Faça-o só se as tiver perguntado.'))) return; ev.preguntas.forEach(q => { if (!S.d.r[q]) S.d.r[q] = 'no'; }); guarda(); pintaAnt(); };
+  enlazaCampos('antBox');
+}
+
+/* ── 3 · expectativas y cribado ── */
+function pintaExp() {
+  const d = S.d, c = cribadoTDC(d), cq = [['pos', 'Positivo|Positive|Positivo'], ['neg', 'Negativo|Negative|Negativo'], ['no', 'No realizado|Not done|Não realizado']];
+  const cr = {alta: ['error', 'Señales de trastorno dismórfico corporal: no tratar hoy y valorar la derivación|Signs of body dysmorphic disorder: do not treat today and consider referral|Sinais de perturbação dismórfica corporal: não tratar hoje e ponderar referenciação'], media: ['aviso', 'Alguna señal de alarma: explora más antes de tratar|Some warning signs: explore further before treating|Algum sinal de alarme: explore mais antes de tratar'], baja: ['ok', 'Sin señales de alarma marcadas|No warning signs ticked|Sem sinais de alarme marcados']};
+  $('expBox').innerHTML = `<div class="card">${area('espera', '¿Qué espera conseguir, con sus palabras?|What do they hope to achieve, in their own words?|O que espera conseguir, pelas suas palavras?')}
+      <fieldset class="a-sn"><legend>${esc(T3('¿Son expectativas realistas para lo que se puede conseguir?|Are these expectations realistic for what can be achieved?|São expectativas realistas para o que se pode conseguir?'))}</legend>${[['si', 'Sí|Yes|Sim'], ['no', 'No|No|Não']].map(([k, l]) => `<label><input type="radio" name="expec" value="${k}" ${d.expec === k ? 'checked' : ''}> <span>${esc(T3(l))}</span></label>`).join('')}</fieldset></div>
+    <div class="card"><h3>${esc(T3('Trastorno dismórfico corporal|Body dysmorphic disorder|Perturbação dismórfica corporal'))}</h3>
+      <p class="help">${esc(T3('Señales de alarma basadas en los criterios del DSM-5. No son un cuestionario validado: orientan, no diagnostican.|Warning signs based on DSM-5 criteria. They are not a validated questionnaire: they guide, they do not diagnose.|Sinais de alarme baseados nos critérios do DSM-5. Não são um questionário validado: orientam, não diagnosticam.'))}</p>
+      ${TDC.map(([k, tx]) => `<div class="a-q${d.tdc[k] ? '' : ' a-pend'}">${sn('t_' + k, d.tdc[k], esc(T3(tx)))}</div>`).join('')}
+      <fieldset class="a-sn"><legend>${esc(T3('Cuestionario validado, si lo has pasado (por ejemplo, BDDQ-AS o COPS)|Validated questionnaire, if used (e.g. BDDQ-AS or COPS)|Questionário validado, se o aplicou (por exemplo, BDDQ-AS ou COPS)'))}</legend>${cq.map(([k, l]) => `<label><input type="radio" name="cuest" value="${k}" ${d.cuest === k ? 'checked' : ''}> <span>${esc(T3(l))}</span></label>`).join('')}</fieldset>
+      ${d.cuest && d.cuest !== 'no' ? campo('cuestN', 'Nombre del cuestionario|Questionnaire name|Nome do questionário') : ''}
+      <div class="${cr[c][0] === 'ok' ? 'okbox' : 'aviso'}" aria-live="polite">${esc(T3(cr[c][1]))}</div></div>
+    <div class="card">${area('notas', 'Observaciones para la historia|Notes for the record|Observações para o processo', 3)}</div>`;
+  $$('#expBox input[type=radio]').forEach(x => x.onchange = () => { if (x.name === 'expec') S.d.expec = x.value; else if (x.name === 'cuest') S.d.cuest = x.value; else S.d.tdc[x.name.slice(2)] = x.value; S.esEjemplo = false; guarda(); repinta(pintaExp); });
+  enlazaCampos('expBox');
+}
+
+/* ── 4 · resultado ── */
+function mdHtml(md) {   // Markdown mínimo del resumen: títulos, listas, cita y negrita
+  const inl = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  return md.split('\n').map(l => /^## /.test(l) ? `<h4>${inl(l.slice(3))}</h4>` : /^> /.test(l) ? `<div class="aviso">${inl(l.slice(2))}</div>` : /^- /.test(l) ? `<p class="a-li">${inl(l.slice(2))}</p>` : l.trim() ? `<p>${inl(l)}</p>` : '').join('');
+}
+const SEM = [['ok', 'Sin contraindicaciones detectadas|No contraindications detected|Sem contraindicações detetadas', 'check'], ['aviso', 'Precaución|Caution|Precaução', 'help'], ['error', 'No tratar ahora|Do not treat now|Não tratar agora', 'x']];
+const hayDatos = () => S.d.id || Object.keys(S.d.tec).some(k => S.d.tec[k]);
+function pintaRes() {
+  const d = S.d, ev = evalua(d);
+  const hist = S.hist.length ? `<div class="card"><h3>${esc(T3('Primeras visitas guardadas|Saved first visits|Primeiras consultas guardadas'))}</h3><div class="table-wrap"><table><tr><th>${esc(T3('Fecha|Date|Data'))}</th><th>${esc(T3('Identificador|Identifier|Identificador'))}</th><th></th></tr>${S.hist.map((h, i) => `<tr><td>${new Date(h.ts).toLocaleDateString(locale())}</td><td>${esc(h.id || '—')}</td><td><button class="btn btn-ghost btn-sm" type="button" data-abre="${i}">${esc(T3('Abrir|Open|Abrir'))}</button></td></tr>`).join('')}</table></div></div>` : '';
+  if (!ev.tecs.length) { $('resBox').innerHTML = `<div class="card"><p class="empty">${esc(T3('Marca al menos una técnica en el paso 1.|Tick at least one technique in step 1.|Marque pelo menos uma técnica no passo 1.'))}</p></div>` + hist; enlazaHist(); return; }
+  const md = resumenMd(d, ev);
+  $('resBox').innerHTML = `${ev.faltan.length ? `<div class="card a-falta"><h3>${esc(T3f('Faltan {0} dato(s): el resultado aún no es completo|{0} item(s) missing: the result is not yet complete|Faltam {0} dado(s): o resultado ainda não é completo', ev.faltan.length))}</h3><p>${ev.faltan.map(f => esc(nomFalta(f))).join(' · ')}</p></div>` : ''}
+    <div class="a-sem">${ev.tecs.map(t => { const r = ev.res[t], s = SEM[r.nivel]; return `<div class="card a-st a-n${r.nivel}"><div class="a-sth">${ico(s[2])}<div><b>${esc(T3(TEC[t]))}</b><span class="fa-chip ${s[0]}">${esc(T3(s[1]))}</span></div></div>${r.m.length ? `<ul class="fa-ul">${r.m.map(x => `<li><b>${esc(T3(x.n === 'r' ? 'No tratar|Do not treat|Não tratar' : 'Precaución|Caution|Precaução'))}:</b> ${esc(txtMotivo(x, ev.tdc))}</li>`).join('')}</ul>` : ''}</div>`; }).join('')}</div>
+    <div class="card"><h3>${esc(T3('Resumen para la historia clínica|Summary for the clinical record|Resumo para o processo clínico'))}</h3><div class="a-doc" id="resMd" tabindex="0" role="region" aria-label="${esc(T3('Resumen|Summary|Resumo'))}">${mdHtml(md)}</div>
+      <div class="actions"><button class="btn btn-word" id="resWord" type="button">${ico('doc')}<span>Word</span></button><button class="btn btn-ghost" id="resCopy" type="button">${ico('copy')}<span>${esc(T3('Copiar texto|Copy text|Copiar texto'))}</span></button><button class="btn btn-ghost" id="resFicha" type="button">${ico('download')}<span>${esc(T3('Ficha para el kit (JSON)|Kit file (JSON)|Ficha para o kit (JSON)'))}</span></button><button class="btn btn-ghost" id="resNueva" type="button">${ico('plus')}<span>${esc(T3('Guardar y empezar otra|Save and start another|Guardar e começar outra'))}</span></button></div>
+      <p class="help">${esc(T3('Las reglas resumen contraindicaciones habituales. Comprueba siempre la ficha técnica o las instrucciones de uso de tu producto.|The rules summarise common contraindications. Always check your product\'s summary of product characteristics or instructions for use.|As regras resumem contraindicações habituais. Verifique sempre o resumo das características ou as instruções de utilização do seu produto.'))}</p></div>` + hist;
+  const nom = `anamnesis_${(d.id || 'paciente').replace(/[^\w-]+/g, '_')}_${new Date().toISOString().slice(0, 10)}`;
+  $('resWord').onclick = async () => { try { dl(nom + '.docx', await wordDeMarkdown(resumenMd(d, evalua(d)), {titulo: T3('Primera visita|First visit|Primeira consulta') + (d.id ? ' · ' + d.id : ''), subtitulo: new Date().toLocaleDateString(locale()), pie: T3('Generado con AnamnesIA (Kit EstéticIA). Las reglas resumen contraindicaciones habituales y no sustituyen a la ficha técnica ni al juicio clínico.|Generated with AnamnesIA (EstéticIA Kit). The rules summarise common contraindications and do not replace product information or clinical judgement.|Gerado com o AnamnesIA (Kit EstéticIA). As regras resumem contraindicações habituais e não substituem o resumo das características nem o juízo clínico.')})); } catch (e) { toast(e.message, 7000); } };
+  $('resCopy').onclick = async () => { try { await navigator.clipboard.writeText(resumenMd(d, evalua(d))); toast(T3('Resumen copiado|Summary copied|Resumo copiado')); } catch (e) { dl(nom + '.txt', resumenMd(d, evalua(d)), 'text/plain;charset=utf-8'); } };
+  $('resFicha').onclick = () => dl(nom + '.json', JSON.stringify(fichaKit(d, evalua(d)), null, 2), 'application/json');
+  $('resNueva').onclick = () => { if (!confirm(T3('¿Guardar esta primera visita y empezar otra?|Save this first visit and start another?|Guardar esta primeira consulta e começar outra?'))) return; if (!S.esEjemplo) { S.hist.unshift(JSON.parse(JSON.stringify(S.d))); S.hist = S.hist.slice(0, 100); } S.d = D0(); S.esEjemplo = false; guardaYa(); go(1); };
+  enlazaHist();
+}
+function enlazaHist() {
+  $$('[data-abre]').forEach(b => b.onclick = () => {
+    const h = S.hist.splice(+b.dataset.abre, 1)[0];
+    if (hayDatos() && !S.esEjemplo) S.hist.unshift(JSON.parse(JSON.stringify(S.d)));
+    S.d = {...D0(), ...h}; S.esEjemplo = false; guardaYa(); pintaRes(); window.scrollTo(0, 0);
+  });
+}
+
+/* ── ejemplo (datos; los textos libres dependen del idioma y se recargan al cambiarlo) ── */
+function aplicaEjemplo() {
+  const d = D0(); Object.assign(d, {id: 'EJ-01', edad: '34', sexo: 'm', foto: '3', motivo: T3('«Parezco siempre enfadada» por las arrugas del entrecejo, y quiere más volumen en los labios.|«I always look angry» because of frown lines, and she wants more lip volume.|«Pareço sempre zangada» por causa das rugas do sobrolho, e quer mais volume nos lábios.'), tec: {tox: true, ah: true},
+    alergias: T3('Ninguna conocida|None known|Nenhuma conhecida'), previos: T3('Ninguno|None|Nenhum'), espera: T3('Verse descansada para una boda dentro de 10 días.|To look rested for a wedding in 10 days.|Parecer descansada para um casamento daqui a 10 dias.'), expec: 'si', cuest: 'no'});
+  for (const q of PREGS) d.r[q[0]] = 'no';
+  d.r.lact = 'si'; d.det.lact = T3('Hijo de 4 meses|4-month-old son|Filho de 4 meses'); d.r.herpes = 'si'; d.det.herpes = T3('2 o 3 brotes al año|2 or 3 outbreaks a year|2 ou 3 surtos por ano');
+  for (const [k] of TDC) d.tdc[k] = 'no';
+  S.d = d; S.esEjemplo = true;
+}
+window.addEventListener('langchange', () => { if (S.esEjemplo) { aplicaEjemplo(); guarda(); (RENDER[step] || (() => {}))(); } });
+
+(async () => { const p = await cargaEstado(); if (p) S = {...S, ...p, d: {...D0(), ...(p.d || {})}}; iniciaUI(); if (S.esEjemplo) aplicaEjemplo(); go(0); })();
+
+</script>
+</body></html>
