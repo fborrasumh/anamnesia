@@ -4,6 +4,8 @@ Primera visita guiada en medicina estética. Aplicación web de un solo fichero.
 
 **Usar la app:** https://fborrasumh.github.io/anamnesia/
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24186888.svg)](https://doi.org/10.5281/zenodo.24186888)
+
 **Idiomas:** español (por defecto), inglés, portugués; selector en la barra superior (o `?lang=en` / `?lang=pt` en la URL).
 
 ## Qué hace
@@ -41,7 +43,7 @@ ORCID: Fernando Borrás Rocher [0000-0002-5519-4573](https://orcid.org/0000-0002
 
 ## Cómo citar
 
-Borrás Rocher, F. y Caride Miana, E. (2026). *AnamnesIA* (v1.0.0) [Software]. (DOI en trámite)
+Borrás Rocher, F. y Caride Miana, E. (2026). *AnamnesIA* (v1.0.0) [Software]. DOI: [10.5281/zenodo.24186888](https://doi.org/10.5281/zenodo.24186888)
 
 ## Licencia
 
